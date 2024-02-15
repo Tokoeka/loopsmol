@@ -39,21 +39,23 @@ import { customRestoreMp } from "../engine/moods";
 const Diary: Task[] = [
   {
     name: "Forest",
-    after: ["Start"],
+    after: [ "Start" ],
     completed: () => step("questL11Black") >= 2,
     do: $location`The Black Forest`,
     post: () => {
       if (have($effect`Really Quite Poisoned`)) uneffect($effect`Really Quite Poisoned`);
     },
     outfit: () => {
-      const equip = [$item`blackberry galoshes`];
-      if (have($item`latte lovers member's mug`) && !get("latteUnlocks").includes("cajun")) {
+      const equip = [ $item`blackberry galoshes` ];
+      if (have($item`latte lovers member's mug`) && !get("latteUnlocks").includes("cajun"))
+      {
         equip.push($item`latte lovers member's mug`);
       }
       if (have($item`candy cane sword cane`) && !get("candyCaneSwordBlackForest", false))
         equip.push($item`candy cane sword cane`);
 
-      if (have($item`reassembled blackbird`)) {
+      if (have($item`reassembled blackbird`))
+      {
         return {
           equip: equip,
           modifier: "50 combat 5max, -1ML",
@@ -85,7 +87,7 @@ const Diary: Task[] = [
   },
   {
     name: "Buy Documents",
-    after: ["Forest"],
+    after: [ "Forest" ],
     ready: () => myMeat() >= 5000,
     completed: () => have($item`forged identification documents`) || step("questL11Black") >= 4,
     do: (): void => {
@@ -99,12 +101,13 @@ const Diary: Task[] = [
   },
   {
     name: "Diary",
-    after: ["Buy Documents", "Misc/Unlock Beach"],
+    after: [ "Buy Documents", "Misc/Unlock Beach" ],
     ready: () => myMeat() >= 500,
     completed: () => step("questL11Black") >= 4,
     do: $location`The Shore, Inc. Travel Agency`,
     post: (): void => {
-      if (step("questL11Black") < 4) {
+      if (step("questL11Black") < 4)
+      {
         debug("Possible mafia diary desync detected; refreshing...");
         cliExecute("refresh all");
         if (have($item`your father's MacGuffin diary`)) use($item`your father's MacGuffin diary`);
@@ -119,7 +122,7 @@ const Diary: Task[] = [
 const Desert: Task[] = [
   {
     name: "Scrip",
-    after: ["Misc/Unlock Beach", "Misc/Unlock Island"],
+    after: [ "Misc/Unlock Beach", "Misc/Unlock Island" ],
     ready: () => myMeat() >= 6000 || (step("questL11Black") >= 4 && myMeat() >= 500),
     completed: () => have($item`Shore Inc. Ship Trip Scrip`) || have($item`UV-resistant compass`),
     do: $location`The Shore, Inc. Travel Agency`,
@@ -141,7 +144,7 @@ const Desert: Task[] = [
   },
   {
     name: "Compass",
-    after: ["Misc/Unlock Beach", "Scrip"],
+    after: [ "Misc/Unlock Beach", "Scrip" ],
     completed: () => have($item`UV-resistant compass`),
     do: () => buy($coinmaster`The Shore, Inc. Gift Shop`, 1, $item`UV-resistant compass`),
     limit: { tries: 1 },
@@ -149,7 +152,7 @@ const Desert: Task[] = [
   },
   {
     name: "Oasis",
-    after: ["Compass"],
+    after: [ "Compass" ],
     completed: () => get("desertExploration") >= 100,
     ready: () => !have($effect`Ultrahydrated`) && get("oasisAvailable", false),
     do: $location`The Oasis`,
@@ -157,7 +160,7 @@ const Desert: Task[] = [
   },
   {
     name: "Oasis Drum",
-    after: ["Compass"],
+    after: [ "Compass" ],
     ready: () => have($item`worm-riding hooks`) || itemAmount($item`worm-riding manual page`) >= 15,
     priority: () => (have($effect`Ultrahydrated`) ? Priorities.MinorEffect : Priorities.None),
     completed: () =>
@@ -175,9 +178,11 @@ const Desert: Task[] = [
         ((get("gnasirProgress") & 1) === 0 && have($item`stone rose`)) ||
         ((get("gnasirProgress") & 2) === 0 && have($item`can of black paint`)) ||
         ((get("gnasirProgress") & 4) === 0 && have($item`killing jar`))
-      ) {
+      )
+      {
         let res = visitUrl("place.php?whichplace=desertbeach&action=db_gnasir");
-        while (res.includes("value=2")) {
+        while (res.includes("value=2"))
+        {
           res = runChoice(2);
         }
         runChoice(1);
@@ -188,17 +193,17 @@ const Desert: Task[] = [
   },
   {
     name: "Milestone",
-    after: ["Misc/Unlock Beach", "Diary"],
+    after: [ "Misc/Unlock Beach", "Diary" ],
     ready: () => have($item`milestone`),
     completed: () => !have($item`milestone`) || get("desertExploration") >= 100,
     do: () => use($item`milestone`, availableAmount($item`milestone`)),
-    limit: { tries: 5 }, // 5 to account for max of starting, poke garden & pull
+    limit: { tries: 5 }, // 5 to account for max of starting & pull
     freeaction: true,
   },
   {
     name: "Desert",
-    after: ["Diary", "Compass"],
-    acquire: [{ item: $item`can of black paint`, useful: () => (get("gnasirProgress") & 2) === 0 }],
+    after: [ "Diary", "Compass" ],
+    acquire: [ { item: $item`can of black paint`, useful: () => (get("gnasirProgress") & 2) === 0 } ],
     ready: () => {
       const cond =
         (have($item`can of black paint`) ||
@@ -252,9 +257,11 @@ const Desert: Task[] = [
         ((get("gnasirProgress") & 1) === 0 && have($item`stone rose`)) ||
         ((get("gnasirProgress") & 2) === 0 && have($item`can of black paint`)) ||
         ((get("gnasirProgress") & 4) === 0 && have($item`killing jar`))
-      ) {
+      )
+      {
         let res = visitUrl("place.php?whichplace=desertbeach&action=db_gnasir");
-        while (res.includes("value=2")) {
+        while (res.includes("value=2"))
+        {
           res = runChoice(2);
         }
         runChoice(1);
@@ -271,14 +278,18 @@ function rotatePyramid(goal: number): void {
   const ratchets = (goal - get("pyramidPosition") + 5) % 5;
   const to_buy =
     ratchets - itemAmount($item`tomb ratchet`) - itemAmount($item`crumbling wooden wheel`);
-  if (to_buy > 0) {
+  if (to_buy > 0)
+  {
     buy($item`tomb ratchet`, to_buy);
   }
   visitUrl("place.php?whichplace=pyramid&action=pyramid_control");
-  for (let i = 0; i < ratchets; i++) {
-    if (have($item`crumbling wooden wheel`)) {
+  for (let i = 0; i < ratchets; i++)
+  {
+    if (have($item`crumbling wooden wheel`))
+    {
       visitUrl("choice.php?whichchoice=929&option=1&pwd");
-    } else {
+    } else
+    {
       visitUrl("choice.php?whichchoice=929&option=2&pwd");
     }
   }
@@ -289,7 +300,7 @@ function rotatePyramid(goal: number): void {
 const Pyramid: Task[] = [
   {
     name: "Open Pyramid",
-    after: ["Desert", "Oasis", "Oasis Drum", "Manor/Boss", "Palindome/Boss", "Hidden City/Boss"],
+    after: [ "Desert", "Oasis", "Oasis Drum", "Manor/Boss", "Palindome/Boss", "Hidden City/Boss" ],
     completed: () => step("questL11Pyramid") >= 0,
     do: () => visitUrl("place.php?whichplace=desertbeach&action=db_pyramid1"),
     limit: { tries: 1 },
@@ -297,7 +308,7 @@ const Pyramid: Task[] = [
   },
   {
     name: "Upper Chamber",
-    after: ["Open Pyramid"],
+    after: [ "Open Pyramid" ],
     completed: () => step("questL11Pyramid") >= 1,
     do: $location`The Upper Chamber`,
     outfit: { modifier: "+combat" },
@@ -305,12 +316,14 @@ const Pyramid: Task[] = [
   },
   {
     name: "Middle Chamber",
-    after: ["Upper Chamber"],
+    after: [ "Upper Chamber" ],
     prepare: () => {
-      if (haveLoathingIdolMicrophone()) {
+      if (haveLoathingIdolMicrophone())
+      {
         ensureEffect($effect`Spitting Rhymes`);
       }
-      if (have($item`tangle of rat tails`) && myMaxmp() >= 80) {
+      if (have($item`tangle of rat tails`) && myMaxmp() >= 80)
+      {
         customRestoreMp(80); // Weaksauce + 3x saucegeyser
       }
     },
@@ -331,8 +344,8 @@ const Pyramid: Task[] = [
           return result.while_("!mpbelow 24", Macro.skill($skill`Saucegeyser`));
         return result;
       }, $monster`tomb rat`)
-      .killItem([$monster`tomb rat`, $monster`tomb rat king`])
-      .banish([$monster`tomb asp`, $monster`tomb servant`]),
+      .killItem([ $monster`tomb rat`, $monster`tomb rat king` ])
+      .banish([ $monster`tomb asp`, $monster`tomb servant` ]),
     outfit: () => {
       const result: OutfitSpec = { modifier: "item", equip: [] };
       if (have($item`Lil' Doctor™ bag`) && get("_otoscopeUsed") < 3)
@@ -345,9 +358,10 @@ const Pyramid: Task[] = [
   },
   {
     name: "Middle Chamber Delay",
-    after: ["Upper Chamber", "Middle Chamber"],
+    after: [ "Upper Chamber", "Middle Chamber" ],
     prepare: () => {
-      if (haveLoathingIdolMicrophone()) {
+      if (haveLoathingIdolMicrophone())
+      {
         ensureEffect($effect`Spitting Rhymes`);
       }
     },
@@ -365,7 +379,7 @@ const Pyramid: Task[] = [
   },
   {
     name: "Get Token",
-    after: ["Middle Chamber Delay"],
+    after: [ "Middle Chamber Delay" ],
     completed: () =>
       have($item`ancient bronze token`) || have($item`ancient bomb`) || get("pyramidBombUsed"),
     do: () => rotatePyramid(4),
@@ -373,21 +387,21 @@ const Pyramid: Task[] = [
   },
   {
     name: "Get Bomb",
-    after: ["Get Token"],
+    after: [ "Get Token" ],
     completed: () => have($item`ancient bomb`) || get("pyramidBombUsed"),
     do: () => rotatePyramid(3),
     limit: { tries: 1 },
   },
   {
     name: "Use Bomb",
-    after: ["Get Bomb"],
+    after: [ "Get Bomb" ],
     completed: () => get("pyramidBombUsed"),
     do: () => rotatePyramid(1),
     limit: { tries: 1 },
   },
   {
     name: "Boss",
-    after: ["Use Bomb"],
+    after: [ "Use Bomb" ],
     completed: () => step("questL11Pyramid") === 999,
     do: () => visitUrl("place.php?whichplace=pyramid&action=pyramid_state1a"),
     post: () => {
@@ -422,7 +436,7 @@ export const MacguffinQuest: Quest = {
     ...Pyramid,
     {
       name: "Finish",
-      after: ["Boss"],
+      after: [ "Boss" ],
       priority: () => (councilSafe() ? Priorities.Free : Priorities.BadMood),
       completed: () => step("questL11MacGuffin") === 999,
       do: () => visitUrl("council.php"),
