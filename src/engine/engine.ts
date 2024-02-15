@@ -841,7 +841,6 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
         [
           "rest in your campaway tent",
           "rest at the chateau",
-          "rest at your campground",
           "sleep on your clan sofa",
         ]
       ),
@@ -851,7 +850,6 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
         [
           "rest in your campaway tent",
           "rest at the chateau",
-          "rest at your campground",
           "sleep on your clan sofa",
         ]
       ),
