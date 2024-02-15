@@ -20,7 +20,6 @@ import { Priorities } from "../engine/priority";
 import { Quest, Task } from "../engine/task";
 import { step } from "grimoire-kolmafia";
 import { Keys, keyStrategy } from "./keys";
-import { trainSetAvailable } from "./misc";
 import { yellowSubmarinePossible } from "../engine/outfit";
 import { underStandard } from "../lib";
 
@@ -137,7 +136,6 @@ export const pulls: PullSpec[] = [
     name: "Ore",
     pull: () => (get("trapperOre") === "" ? undefined : Item.get(get("trapperOre"))),
     useful: () => {
-      if (trainSetAvailable()) return false;
       if (
         itemAmount($item`asbestos ore`) >= 3 &&
         itemAmount($item`linoleum ore`) >= 3 &&
@@ -281,24 +279,29 @@ class Pull {
   price?: number;
 
   constructor(spec: PullSpec) {
-    if ("name" in spec) {
+    if ("name" in spec)
+    {
       this.name = spec.name;
       this.description = spec.description ?? spec.name;
-    } else {
+    } else
+    {
       this.name = spec.pull.name;
       this.description = spec.description;
     }
 
     const pull = spec.pull;
-    if (pull instanceof Item) {
-      this.items = () => [pull];
-    } else if (typeof pull === "function") {
+    if (pull instanceof Item)
+    {
+      this.items = () => [ pull ];
+    } else if (typeof pull === "function")
+    {
       this.items = () => {
         const result = pull();
-        if (result === undefined || result instanceof Item) return [result];
+        if (result === undefined || result instanceof Item) return [ result ];
         return result;
       };
-    } else {
+    } else
+    {
       this.items = () => pull;
     }
     this.duplicate = spec.duplicate ?? false;
@@ -313,7 +316,8 @@ class Pull {
   }
 
   public wasPulled(pulled: Set<Item>) {
-    for (const item of this.items()) {
+    for (const item of this.items())
+    {
       if (item === undefined) continue;
       if (!this.duplicate && have(item)) return true;
       if (pulled.has(item)) return true;
@@ -325,7 +329,8 @@ class Pull {
     const needed = this.useful();
     if (needed === false) return false;
 
-    for (const item of this.items()) {
+    for (const item of this.items())
+    {
       if (item === undefined) return undefined; // We don't even know which item yet
       if (!isUnrestricted(item) && underStandard()) continue;
       if (storageAmount(item) > 0) return needed;
@@ -335,10 +340,12 @@ class Pull {
   }
 
   public pull(): void {
-    for (const item of this.items()) {
+    for (const item of this.items())
+    {
       if (item === undefined) throw `Unable to pull ${this.name}; the desired item is undefined`;
       if (!isUnrestricted(item) && underStandard()) continue;
-      if (storageAmount(item) > 0 || buyUsingStorage(1, item, this.price ?? 100000)) {
+      if (storageAmount(item) > 0 || buyUsingStorage(1, item, this.price ?? 100000))
+      {
         cliExecute(`pull ${item.name}`);
         set("_loopsmol_pulls_used", get("_loopsmol_pulls_used", 0) + 1);
         return;
@@ -376,22 +383,25 @@ class PullStrategy {
     let count = pullsRemaining() - (20 - args.major.pulls);
     if (inHardcore() || myTurncount() >= 1000) count = 0; // No pulls in hardcore or out of ronin
 
-    for (let i = 0; i < this.pulls.length; i++) {
-      if (this.pulls[i].wasPulled(pulled)) {
-        this.enabled[i] = PullState.PULLED;
+    for (let i = 0; i < this.pulls.length; i++)
+    {
+      if (this.pulls[ i ].wasPulled(pulled))
+      {
+        this.enabled[ i ] = PullState.PULLED;
         continue;
       }
 
-      switch (this.pulls[i].shouldPull()) {
+      switch (this.pulls[ i ].shouldPull())
+      {
         case false:
-          this.enabled[i] = PullState.UNNEEDED;
+          this.enabled[ i ] = PullState.UNNEEDED;
           continue;
         case true:
-          this.enabled[i] = count > 0 ? PullState.READY : PullState.MAYBE_IFROOM;
+          this.enabled[ i ] = count > 0 ? PullState.READY : PullState.MAYBE_IFROOM;
           count--;
           continue;
         case undefined:
-          this.enabled[i] = PullState.MAYBE_UNSURE;
+          this.enabled[ i ] = PullState.MAYBE_UNSURE;
           count--;
           continue;
       }
@@ -413,11 +423,13 @@ class PullStrategy {
    * @returns True if the item was pulled.
    */
   public pullIfReady(item: Item): boolean {
-    for (let i = 0; i < this.pulls.length; i++) {
-      if (this.enabled[i] !== PullState.MAYBE_UNSURE) continue;
-      const options = this.pulls[i].items();
-      if (options.includes(item)) {
-        this.pulls[i].pull();
+    for (let i = 0; i < this.pulls.length; i++)
+    {
+      if (this.enabled[ i ] !== PullState.MAYBE_UNSURE) continue;
+      const options = this.pulls[ i ].items();
+      if (options.includes(item))
+      {
+        this.pulls[ i ].pull();
         this.update();
         return true;
       }
@@ -435,10 +447,10 @@ export const PullQuest: Quest = {
         name: pull.name,
         priority: () => Priorities.Free,
         after: [],
-        ready: () => pullStrategy.enabled[index] === PullState.READY,
+        ready: () => pullStrategy.enabled[ index ] === PullState.READY,
         completed: () =>
-          pullStrategy.enabled[index] === PullState.PULLED ||
-          pullStrategy.enabled[index] === PullState.UNNEEDED,
+          pullStrategy.enabled[ index ] === PullState.PULLED ||
+          pullStrategy.enabled[ index ] === PullState.UNNEEDED,
         do: () => pull.pull(),
         post: () => {
           pull.post();

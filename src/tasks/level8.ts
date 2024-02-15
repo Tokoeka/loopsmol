@@ -23,7 +23,6 @@ import { councilSafe } from "./level12";
 import { fillHp } from "../engine/moods";
 import { summonStrategy } from "./summons";
 import { coldPlanner } from "../engine/outfit";
-import { trainSetAvailable } from "./misc";
 
 export const McLargeHugeQuest: Quest = {
   name: "McLargeHuge",
@@ -40,7 +39,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Trapper Request",
-      after: ["Start"],
+      after: [ "Start" ],
       completed: () => step("questL08Trapper") >= 1,
       do: () => visitUrl("place.php?whichplace=mclargehuge&action=trappercabin"),
       limit: { tries: 1 },
@@ -49,7 +48,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Clover Ore",
-      after: ["Trapper Request", "Pull/Ore", "Misc/Hermit Clover"],
+      after: [ "Trapper Request", "Pull/Ore", "Misc/Hermit Clover" ],
       ready: () =>
         have($item`11-leaf clover`) &&
         summonStrategy.getSourceFor($monster`mountain man`) === undefined &&
@@ -68,7 +67,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Goatlet",
-      after: ["Trapper Request"],
+      after: [ "Trapper Request" ],
       ready: () =>
         Counter.get("Spooky VHS Tape Monster") === 0 ||
         get("spookyVHSTapeMonster") !== $monster`dairy goat`,
@@ -93,8 +92,8 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Trapper Return",
-      after: ["Goatlet", "Pull/Ore", "Summon/Mountain Man", "Clover Ore"],
-      ready: () => get("trapperOre") !== "" && itemAmount(Item.get(get("trapperOre"))) >= 3, // Checked here since there is no task for Trainset ores
+      after: [ "Goatlet", "Pull/Ore", "Summon/Mountain Man", "Clover Ore" ],
+      ready: () => get("trapperOre") !== "" && itemAmount(Item.get(get("trapperOre"))) >= 3,
       completed: () => step("questL08Trapper") >= 2,
       do: () => visitUrl("place.php?whichplace=mclargehuge&action=trappercabin"),
       limit: { tries: 1 },
@@ -102,7 +101,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Ninja",
-      after: ["Trapper Return", "Palindome/Cold Snake"],
+      after: [ "Trapper Return", "Palindome/Cold Snake" ],
       completed: () =>
         (have($item`ninja rope`) && have($item`ninja carabiner`) && have($item`ninja crampons`)) ||
         step("questL08Trapper") >= 3,
@@ -123,7 +122,8 @@ export const McLargeHugeQuest: Quest = {
         if (
           have($item`latte lovers member's mug`) &&
           get("latteModifier").includes("Combat Rate: 10")
-        ) {
+        )
+        {
           // Ensure kramco does not override +combat
           spec.offhand = $item`latte lovers member's mug`;
         }
@@ -138,7 +138,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Climb",
-      after: ["Trapper Return", "Ninja"],
+      after: [ "Trapper Return", "Ninja" ],
       completed: () => step("questL08Trapper") >= 3,
       ready: () => coldPlanner.maximumPossible(true) >= 5,
       prepare: () => {
@@ -154,7 +154,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Peak",
-      after: ["Climb"],
+      after: [ "Climb" ],
       completed: () => step("questL08Trapper") >= 5,
       ready: () => coldPlanner.maximumPossible(true) >= 5,
       prepare: () => {
@@ -174,7 +174,7 @@ export const McLargeHugeQuest: Quest = {
     },
     {
       name: "Finish",
-      after: ["Peak"],
+      after: [ "Peak" ],
       completed: () => step("questL08Trapper") === 999,
       do: () => visitUrl("place.php?whichplace=mclargehuge&action=trappercabin"),
       limit: { tries: 1 },
@@ -183,10 +183,9 @@ export const McLargeHugeQuest: Quest = {
   ],
 };
 
-// Get the number of ores needed from non-trainset places
+// Get the number of ores needed
 export function oresNeeded(): number {
   if (step("questL08Trapper") >= 2) return 0;
-  if (trainSetAvailable()) return 0;
   let ore_needed = 3;
   ore_needed -= Math.min(
     itemAmount($item`asbestos ore`),

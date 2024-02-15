@@ -2,10 +2,8 @@ import {
   changeMcd,
   council,
   currentMcd,
-  getWorkshed,
   Item,
   itemAmount,
-  myAscensions,
   myHp,
   myMaxhp,
   myMaxmp,
@@ -24,7 +22,6 @@ import {
   $location,
   $monster,
   $monsters,
-  $skill,
   AutumnAton,
   ensureEffect,
   get,
@@ -43,7 +40,7 @@ import { stenchPlanner } from "../engine/outfit";
 const ABoo: Task[] = [
   {
     name: "ABoo Start",
-    after: ["Start Peaks"],
+    after: [ "Start Peaks" ],
     completed: () =>
       $location`A-Boo Peak`.noncombatQueue.includes("Faction Traction = Inaction") ||
       get("booPeakProgress") < 100,
@@ -51,32 +48,8 @@ const ABoo: Task[] = [
     limit: { tries: 1 },
   },
   {
-    name: "ABoo Carto",
-    after: ["ABoo Start"],
-    completed: () =>
-      !have($skill`Comprehensive Cartography`) ||
-      $location`A-Boo Peak`.turnsSpent > 0 ||
-      get("lastCartographyBooPeak") === myAscensions(),
-    prepare: () => {
-      if (have($item`pec oil`)) ensureEffect($effect`Oiled-Up`);
-      use($item`A-Boo clue`);
-      fillHp();
-    },
-    do: $location`A-Boo Peak`,
-    effects: $effects`Red Door Syndrome`,
-    outfit: {
-      modifier: "20 spooky res, 20 cold res, HP",
-      familiar: $familiar`Exotic Parrot`,
-    },
-    choices: { 611: 1, 1430: 1 },
-    combat: new CombatStrategy().killItem(),
-    limit: { tries: 1 },
-    freeaction: true,
-    expectbeatenup: true,
-  },
-  {
     name: "ABoo Clues",
-    after: ["ABoo Start", "ABoo Carto"],
+    after: [ "ABoo Start", "ABoo Carto" ],
     completed: () => itemAmount($item`A-Boo clue`) * 30 >= get("booPeakProgress"),
     do: $location`A-Boo Peak`,
     outfit: { modifier: "item", equip: $items`Space Trip safety headphones, HOA regulation book` },
@@ -87,7 +60,7 @@ const ABoo: Task[] = [
   },
   {
     name: "ABoo Horror",
-    after: ["ABoo Start", "ABoo Carto"],
+    after: [ "ABoo Start", "ABoo Carto" ],
     ready: () => have($item`A-Boo clue`),
     completed: () => get("booPeakProgress") === 0,
     prepare: () => {
@@ -108,7 +81,7 @@ const ABoo: Task[] = [
   },
   {
     name: "ABoo Peak",
-    after: ["ABoo Clues", "ABoo Horror"],
+    after: [ "ABoo Clues", "ABoo Horror" ],
     completed: () => get("booPeakLit"),
     do: $location`A-Boo Peak`,
     limit: { tries: 1 },
@@ -118,7 +91,7 @@ const ABoo: Task[] = [
 const Oil: Task[] = [
   {
     name: "Oil Kill",
-    after: ["Start Peaks"],
+    after: [ "Start Peaks" ],
     completed: () => get("oilPeakProgress") === 0,
     prepare: () => {
       if (myMp() < 80 && myMaxmp() >= 80) customRestoreMp(80 - myMp());
@@ -137,19 +110,22 @@ const Oil: Task[] = [
       };
 
       // Use a retro superhero cape to dodge the first hit
-      if (have($item`unwrapped knock-off retro superhero cape`)) {
+      if (have($item`unwrapped knock-off retro superhero cape`))
+      {
         spec.equip.push($item`unwrapped knock-off retro superhero cape`);
-        spec.modes = { retrocape: ["vampire", "hold"] };
+        spec.modes = { retrocape: [ "vampire", "hold" ] };
       }
 
       // The unbreakable umbrella lowers the ML cap; handle it separately.
-      if (have($item`unbreakable umbrella`)) {
+      if (have($item`unbreakable umbrella`))
+      {
         spec.modifier = "ML 80 max, 0.1 item";
         spec.equip.push($item`unbreakable umbrella`);
       }
 
       // Use the Tot for more +item
-      if (have($familiar`Trick-or-Treating Tot`) && have($item`li'l ninja costume`)) {
+      if (have($familiar`Trick-or-Treating Tot`) && have($item`li'l ninja costume`))
+      {
         spec.familiar = $familiar`Trick-or-Treating Tot`;
         spec.equip.push($item`li'l ninja costume`);
       }
@@ -162,7 +138,7 @@ const Oil: Task[] = [
   },
   {
     name: "Oil Peak",
-    after: ["Oil Kill"],
+    after: [ "Oil Kill" ],
     completed: () => get("oilPeakLit"),
     do: $location`Oil Peak`,
     limit: { tries: 1 },
@@ -170,7 +146,7 @@ const Oil: Task[] = [
   },
   {
     name: "Oil Jar", // get oil for jar of oil
-    after: ["Oil Peak"],
+    after: [ "Oil Peak" ],
     completed: () =>
       itemAmount($item`bubblin' crude`) >= 12 ||
       have($item`jar of oil`) ||
@@ -193,7 +169,7 @@ const Oil: Task[] = [
 const Twin: Task[] = [
   {
     name: "Twin Stench Search",
-    after: ["Start Peaks"],
+    after: [ "Start Peaks" ],
     ready: () => !have($item`rusty hedge trimmers`) && stenchPlanner.maximumPossible(true) >= 4,
     completed: () => !!(get("twinPeakProgress") & 1),
     prepare: () => {
@@ -211,7 +187,7 @@ const Twin: Task[] = [
   },
   {
     name: "Twin Stench",
-    after: ["Start Peaks"],
+    after: [ "Start Peaks" ],
     ready: () => have($item`rusty hedge trimmers`) && stenchPlanner.maximumPossible(true) >= 4,
     completed: () => !!(get("twinPeakProgress") & 1),
     prepare: () => {
@@ -228,7 +204,7 @@ const Twin: Task[] = [
   },
   {
     name: "Twin Item Search",
-    after: ["Start Peaks"],
+    after: [ "Start Peaks" ],
     ready: () => !have($item`rusty hedge trimmers`),
     completed: () => !!(get("twinPeakProgress") & 2),
     do: $location`Twin Peak`,
@@ -241,7 +217,7 @@ const Twin: Task[] = [
   },
   {
     name: "Twin Item",
-    after: ["Start Peaks"],
+    after: [ "Start Peaks" ],
     ready: () => have($item`rusty hedge trimmers`),
     completed: () => !!(get("twinPeakProgress") & 2),
     do: () => {
@@ -253,7 +229,7 @@ const Twin: Task[] = [
   },
   {
     name: "Twin Oil Search",
-    after: ["Start Peaks", "Oil Jar"],
+    after: [ "Start Peaks", "Oil Jar" ],
     ready: () => !have($item`rusty hedge trimmers`),
     completed: () => !!(get("twinPeakProgress") & 4),
     do: $location`Twin Peak`,
@@ -262,19 +238,19 @@ const Twin: Task[] = [
     combat: new CombatStrategy().killItem(
       $monsters`bearpig topiary animal, elephant (meatcar?) topiary animal, spider (duck?) topiary animal`
     ),
-    acquire: [{ item: $item`jar of oil` }],
+    acquire: [ { item: $item`jar of oil` } ],
     limit: { soft: 10 },
   },
   {
     name: "Twin Oil",
-    after: ["Start Peaks", "Oil Jar"],
+    after: [ "Start Peaks", "Oil Jar" ],
     ready: () => have($item`rusty hedge trimmers`),
     completed: () => !!(get("twinPeakProgress") & 4),
     do: () => {
       use($item`rusty hedge trimmers`);
     },
     choices: { 606: 3, 609: 1, 616: 1 },
-    acquire: [{ item: $item`jar of oil` }],
+    acquire: [ { item: $item`jar of oil` } ],
     limit: { tries: 1 },
   },
   {
@@ -333,12 +309,10 @@ export const ChasmQuest: Quest = {
     },
     {
       name: "Bridge",
-      after: ["Start", "Macguffin/Forest"], // Wait for black paint
+      after: [ "Start", "Macguffin/Forest" ], // Wait for black paint
       priority: (): Priority => {
-        if (getWorkshed() === $item`model train set`) {
-          return Priorities.BadTrain;
-        }
-        if (AutumnAton.have()) {
+        if (AutumnAton.have())
+        {
           if ($location`The Smut Orc Logging Camp`.turnsSpent === 0)
             return Priorities.GoodAutumnaton;
         }
@@ -353,7 +327,8 @@ export const ChasmQuest: Quest = {
         myMeat() >= 1000,
       completed: () => step("questL09Topping") >= 1,
       prepare: () => {
-        if (get("smutOrcNoncombatProgress") >= 15 && step("questL11Black") >= 2) {
+        if (get("smutOrcNoncombatProgress") >= 15 && step("questL11Black") >= 2)
+        {
           ensureEffect($effect`Red Door Syndrome`);
           ensureEffect($effect`Butt-Rock Hair`);
         }
@@ -364,7 +339,8 @@ export const ChasmQuest: Quest = {
         visitUrl(`place.php?whichplace=orc_chasm&action=bridge${get("chasmBridgeProgress")}`); // use existing materials
       },
       outfit: () => {
-        if (get("smutOrcNoncombatProgress") < 15) {
+        if (get("smutOrcNoncombatProgress") < 15)
+        {
           const equip = $items`Space Trip safety headphones, HOA regulation book`;
           if (have($item`frozen jeans`)) equip.push($item`frozen jeans`);
           else if (have($item`June cleaver`) && get("_juneCleaverCold", 0) >= 5)
@@ -397,7 +373,7 @@ export const ChasmQuest: Quest = {
     },
     {
       name: "Bridge Parts",
-      after: ["Start"],
+      after: [ "Start" ],
       priority: () => Priorities.Free,
       ready: () =>
         (have($item`morningwood plank`) ||
@@ -413,7 +389,7 @@ export const ChasmQuest: Quest = {
     },
     {
       name: "Start Peaks",
-      after: ["Bridge", "Bridge Parts"],
+      after: [ "Bridge", "Bridge Parts" ],
       completed: () => step("questL09Topping") >= 2,
       do: () => {
         visitUrl("place.php?whichplace=highlands&action=highlands_dude");
@@ -427,7 +403,7 @@ export const ChasmQuest: Quest = {
     ...Twin,
     {
       name: "Finish",
-      after: ["ABoo Peak", "Oil Peak", "Twin Init", "Twin Init Search"],
+      after: [ "ABoo Peak", "Oil Peak", "Twin Init", "Twin Init Search" ],
       completed: () => step("questL09Topping") === 999,
       do: () => {
         visitUrl("place.php?whichplace=highlands&action=highlands_dude");

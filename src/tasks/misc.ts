@@ -8,7 +8,6 @@ import {
   fullnessLimit,
   gamedayToInt,
   getCampground,
-  getWorkshed,
   haveEquipped,
   hermit,
   hippyStoneBroken,
@@ -81,12 +80,6 @@ import { Keys, keyStrategy } from "./keys";
 import { atLevel, haveLoathingIdolMicrophone, primestatId, underStandard } from "../lib";
 import { args } from "../args";
 import { coldPlanner, yellowSubmarinePossible } from "../engine/outfit";
-import {
-  getTrainsetConfiguration,
-  getTrainsetPositionsUntilConfigurable,
-  setTrainsetConfiguration,
-  TrainsetPiece,
-} from "./trainrealm";
 import { ROUTE_WAIT_TO_NCFORCE } from "../route";
 import { fillHp } from "../engine/moods";
 
@@ -97,7 +90,7 @@ export const MiscQuest: Quest = {
   tasks: [
     {
       name: "Unlock Beach",
-      after: ["Sewer Accordion", "Sewer Saucepan", "Sewer Totem"],
+      after: [ "Sewer Accordion", "Sewer Saucepan", "Sewer Totem" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= meatBuffer + (knollAvailable() ? 538 : 5000),
       completed: () => have($item`bitchin' meatcar`) || have($item`Desert Bus pass`),
@@ -111,7 +104,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Island Scrip",
-      after: ["Unlock Beach", "Acquire Red Rocket"],
+      after: [ "Unlock Beach", "Acquire Red Rocket" ],
       ready: () =>
         (myMeat() >= 6000 || (step("questL11Black") >= 4 && myMeat() >= meatBuffer + 500)) &&
         myAdventures() >= 20 &&
@@ -142,7 +135,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Unlock Island",
-      after: ["Island Scrip"],
+      after: [ "Island Scrip" ],
       ready: () =>
         (myMeat() >= meatBuffer + 400 || have($item`dingy planks`)) && !yellowSubmarinePossible(),
       completed: () =>
@@ -160,7 +153,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Unlock Island Submarine",
-      after: ["Digital/Open"],
+      after: [ "Digital/Open" ],
       ready: () =>
         itemAmount($item`yellow pixel`) >= 50 &&
         itemAmount($item`red pixel`) >= 5 &&
@@ -249,16 +242,16 @@ export const MiscQuest: Quest = {
           .map((element) => element.monster.name);
 
         const initPriority = new Map<string, number>([
-          ["Meat Drop: +30", 10],
-          ["Item Drop: +15", 9],
-          ["Familiar Experience: +2", 8],
-          ["Adventures: +1", 7],
-          ["Monster Level: +10", 5],
-          [`${myPrimestat()} Percent: +25`, 3],
-          [`Experience (${myPrimestat()}): +4`, 2],
-          ["Meat Drop: -30", -2],
-          ["Item Drop: -15", -2],
-          ["Familiar Experience: -2", -2],
+          [ "Meat Drop: +30", 10 ],
+          [ "Item Drop: +15", 9 ],
+          [ "Familiar Experience: +2", 8 ],
+          [ "Adventures: +1", 7 ],
+          [ "Monster Level: +10", 5 ],
+          [ `${myPrimestat()} Percent: +25`, 3 ],
+          [ `Experience (${myPrimestat()}): +4`, 2 ],
+          [ "Meat Drop: -30", -2 ],
+          [ "Item Drop: -15", -2 ],
+          [ "Familiar Experience: -2", -2 ],
         ]);
 
         const monsterVote =
@@ -271,17 +264,18 @@ export const MiscQuest: Quest = {
           "_voteLocal2",
           "_voteLocal3",
           "_voteLocal4",
-        ].map((v, i) => [i, initPriority.get(get(v)) || (get(v).indexOf("-") === -1 ? 1 : -1)]);
+        ].map((v, i) => [ i, initPriority.get(get(v)) || (get(v).indexOf("-") === -1 ? 1 : -1) ]);
 
-        const bestVotes = voteLocalPriorityArr.sort((a, b) => b[1] - a[1]);
-        const firstInit = bestVotes[0][0];
-        const secondInit = bestVotes[1][0];
+        const bestVotes = voteLocalPriorityArr.sort((a, b) => b[ 1 ] - a[ 1 ]);
+        const firstInit = bestVotes[ 0 ][ 0 ];
+        const secondInit = bestVotes[ 1 ][ 0 ];
 
         visitUrl(
           `choice.php?option=1&whichchoice=1331&g=${monsterVote}&local[]=${firstInit}&local[]=${secondInit}`
         );
 
-        if (!have($item`"I Voted!" sticker`)) {
+        if (!have($item`"I Voted!" sticker`))
+        {
           cliExecute("refresh all");
         }
       },
@@ -293,7 +287,8 @@ export const MiscQuest: Quest = {
       after: [],
       completed: () => false,
       priority: () => {
-        if (!get("lovebugsUnlocked") && have($item`designer sweatpants`) && get("sweat") < 5) {
+        if (!get("lovebugsUnlocked") && have($item`designer sweatpants`) && get("sweat") < 5)
+        {
           // Wait for more sweat, if possible
           return Priorities.BadSweat;
         } else return Priorities.Always;
@@ -301,7 +296,8 @@ export const MiscQuest: Quest = {
       ready: () => {
         if (!have($item`protonic accelerator pack`)) return false;
         if (get("questPAGhost") === "unstarted") return false;
-        switch (get("ghostLocation")) {
+        switch (get("ghostLocation"))
+        {
           case $location`Cobb's Knob Treasury`:
             return step("questL05Goblin") >= 1;
           case $location`The Haunted Conservatory`:
@@ -331,16 +327,19 @@ export const MiscQuest: Quest = {
       },
       prepare: () => {
         // Start quests if needed
-        switch (get("ghostLocation")) {
+        switch (get("ghostLocation"))
+        {
           case $location`Madness Bakery`:
-            if (step("questM25Armorer") === -1) {
+            if (step("questM25Armorer") === -1)
+            {
               visitUrl("shop.php?whichshop=armory");
               visitUrl("shop.php?whichshop=armory&action=talk");
               visitUrl("choice.php?pwd=&whichchoice=1065&option=1");
             }
             return;
           case $location`The Old Landfill`:
-            if (step("questM19Hippy") === -1) {
+            if (step("questM19Hippy") === -1)
+            {
               visitUrl("place.php?whichplace=woods&action=woods_smokesignals");
               visitUrl("choice.php?pwd=&whichchoice=798&option=1");
               visitUrl("choice.php?pwd=&whichchoice=798&option=2");
@@ -348,14 +347,16 @@ export const MiscQuest: Quest = {
             }
             return;
           case $location`The Overgrown Lot`:
-            if (step("questM24Doc") === -1) {
+            if (step("questM24Doc") === -1)
+            {
               visitUrl("shop.php?whichshop=doc");
               visitUrl("shop.php?whichshop=doc&action=talk");
               runChoice(1);
             }
             return;
           case $location`The Skeleton Store`:
-            if (step("questM23Meatsmith") === -1) {
+            if (step("questM23Meatsmith") === -1)
+            {
               visitUrl("shop.php?whichshop=meatsmith");
               visitUrl("shop.php?whichshop=meatsmith&action=talk");
               runChoice(1);
@@ -372,7 +373,8 @@ export const MiscQuest: Quest = {
       },
       do: () => {
         adv1(get("ghostLocation") ?? $location`none`, 0, "");
-        if (wanderingNCs.has(get("lastEncounter"))) {
+        if (wanderingNCs.has(get("lastEncounter")))
+        {
           adv1(get("ghostLocation") ?? $location`none`, 0, "");
         }
       },
@@ -382,13 +384,15 @@ export const MiscQuest: Quest = {
             equip: $items`Talisman o' Namsilat, protonic accelerator pack, designer sweatpants`,
             modifier: "DA, DR",
           };
-        if (get("ghostLocation") === $location`The Icy Peak`) {
+        if (get("ghostLocation") === $location`The Icy Peak`)
+        {
           if (
             !get("lovebugsUnlocked") &&
             have($item`designer sweatpants`) &&
             get("sweat") >= 5 &&
             coldPlanner.maximumPossible(true, $slots`back, pants`) >= 5
-          ) {
+          )
+          {
             return coldPlanner.outfitFor(5, {
               equip: $items`protonic accelerator pack, designer sweatpants`,
               modifier: "DA, DR",
@@ -407,7 +411,8 @@ export const MiscQuest: Quest = {
         };
       },
       combat: new CombatStrategy().macro(() => {
-        if (get("lovebugsUnlocked")) {
+        if (get("lovebugsUnlocked"))
+        {
           return new Macro()
             .skill($skill`Summon Love Gnats`)
             .skill($skill`Shoot Ghost`)
@@ -415,7 +420,8 @@ export const MiscQuest: Quest = {
             .skill($skill`Shoot Ghost`)
             .skill($skill`Trap Ghost`);
         }
-        if (myClass() === $class`Seal Clubber` && myFury() >= 3 && have($skill`Club Foot`)) {
+        if (myClass() === $class`Seal Clubber` && myFury() >= 3 && have($skill`Club Foot`))
+        {
           return new Macro()
             .skill($skill`Club Foot`)
             .skill($skill`Shoot Ghost`)
@@ -424,7 +430,8 @@ export const MiscQuest: Quest = {
             .skill($skill`Trap Ghost`);
         }
 
-        if (haveEquipped($item`designer sweatpants`) && get("sweat") >= 5) {
+        if (haveEquipped($item`designer sweatpants`) && get("sweat") >= 5)
+        {
           return new Macro()
             .skill($skill`Sweat Flood`)
             .skill($skill`Shoot Ghost`)
@@ -448,7 +455,8 @@ export const MiscQuest: Quest = {
             .skill($skill`Trap Ghost`);
       }),
       post: () => {
-        if (get("questPAGhost") !== "unstarted") {
+        if (get("questPAGhost") !== "unstarted")
+        {
           throw `Failed to kill ghost from protonic accelerator pack`;
         }
       },
@@ -471,7 +479,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Acquire Firework Hat",
-      after: ["Acquire Red Rocket"],
+      after: [ "Acquire Red Rocket" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= meatBuffer + 500,
       completed: () =>
@@ -488,7 +496,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Acquire Rocket Boots",
-      after: ["Acquire Red Rocket"],
+      after: [ "Acquire Red Rocket" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= meatBuffer + 1000,
       completed: () =>
@@ -505,7 +513,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Acquire Red Rocket",
-      after: ["Sewer Accordion", "Sewer Totem", "Sewer Saucepan"],
+      after: [ "Sewer Accordion", "Sewer Totem", "Sewer Saucepan" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= meatBuffer + 250,
       completed: () =>
@@ -538,7 +546,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Hermit Clover",
-      after: ["Hidden City/Open Temple", "Acquire Red Rocket"],
+      after: [ "Hidden City/Open Temple", "Acquire Red Rocket" ],
       ready: () => myMeat() >= meatBuffer + 1000,
       completed: () => get("_loopsmol_clovers") === "true",
       do: () => {
@@ -580,7 +588,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Mayday",
-      after: ["Macguffin/Start"],
+      after: [ "Macguffin/Start" ],
       priority: () => Priorities.Free,
       completed: () =>
         !get("hasMaydayContract") || (!have($item`MayDay™ supply package`) && atLevel(11)),
@@ -603,30 +611,8 @@ export const MiscQuest: Quest = {
       freeaction: true,
     },
     {
-      name: "Workshed",
-      after: [],
-      priority: () => Priorities.Free,
-      completed: () =>
-        getWorkshed() !== $item`none` || !have(args.major.workshed) || myTurncount() >= 1000,
-      do: () => use(args.major.workshed),
-      limit: { tries: 1 },
-      freeaction: true,
-    },
-    {
-      name: "Swap Workshed",
-      after: [],
-      priority: () => Priorities.Free,
-      ready: () =>
-        get("_coldMedicineConsults") >= 5 && getWorkshed() === $item`cold medicine cabinet`,
-      completed: () =>
-        !have(args.major.swapworkshed) || get("_workshedItemUsed") || myTurncount() >= 1000,
-      do: () => use(args.major.swapworkshed),
-      limit: { tries: 1 },
-      freeaction: true,
-    },
-    {
       name: "Bugbear Outfit",
-      after: ["Acquire Red Rocket"],
+      after: [ "Acquire Red Rocket" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= meatBuffer + 140,
       completed: () =>
@@ -666,11 +652,13 @@ export const MiscQuest: Quest = {
 
         const upgrades = AutumnAton.currentUpgrades();
         const zones = [];
-        if (!upgrades.includes("leftleg1")) {
+        if (!upgrades.includes("leftleg1"))
+        {
           // Low underground locations
           zones.push($location`Guano Junction`, $location`Cobb's Knob Harem`, $location`Noob Cave`);
         }
-        if (!upgrades.includes("rightleg1")) {
+        if (!upgrades.includes("rightleg1"))
+        {
           // Mid indoor locations
           zones.push(
             $location`The Laugh Floor`,
@@ -679,11 +667,13 @@ export const MiscQuest: Quest = {
           );
         }
 
-        if (!upgrades.includes("leftarm1")) {
+        if (!upgrades.includes("leftarm1"))
+        {
           // Low indoor locations
           zones.push($location`The Haunted Pantry`);
         }
-        if (!upgrades.includes("rightarm1")) {
+        if (!upgrades.includes("rightarm1"))
+        {
           // Mid outdoor locations
           zones.push(
             $location`The Smut Orc Logging Camp`,
@@ -705,7 +695,8 @@ export const MiscQuest: Quest = {
         if (itemAmount($item`goat cheese`) < 3 && step("questL08Trapper") < 2)
           zones.push($location`The Goatlet`);
 
-        if (step("questL09Topping") < 1) {
+        if (step("questL09Topping") < 1)
+        {
           zones.push($location`The Smut Orc Logging Camp`);
         }
 
@@ -757,7 +748,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Prepare Robortender",
-      after: ["Grapefruit"],
+      after: [ "Grapefruit" ],
       priority: () => Priorities.Free,
       ready: () =>
         (((have($item`fish head`) && have($item`boxed wine`)) || have($item`piscatini`)) &&
@@ -774,26 +765,6 @@ export const MiscQuest: Quest = {
       },
       outfit: { familiar: $familiar`Robortender` },
       limit: { tries: 1 },
-      freeaction: true,
-    },
-    {
-      name: "Trainset",
-      after: [],
-      priority: () => Priorities.Free,
-      ready: () =>
-        getWorkshed() === $item`model train set` && getTrainsetPositionsUntilConfigurable() === 0,
-      completed: () => {
-        const config = getTrainsetConfiguration();
-        const desiredConfig = getDesiredTrainsetConfig();
-        for (let i = 0; i < 8; i++) {
-          if (config[i] !== desiredConfig[i]) return false;
-        }
-        return true;
-      },
-      do: () => {
-        setTrainsetConfiguration(getDesiredTrainsetConfig());
-      },
-      limit: { tries: 20, unready: true },
       freeaction: true,
     },
     {
@@ -815,7 +786,7 @@ export const MiscQuest: Quest = {
       ready: () => have($item`S.I.T. Course Completion Certificate`),
       completed: () => get("_sitCourseCompleted", true) || have($skill`Insectologist`),
       do: () => use($item`S.I.T. Course Completion Certificate`),
-      choices: { [1494]: 2 },
+      choices: { [ 1494 ]: 2 },
       limit: { tries: 1 },
       freeaction: true,
     },
@@ -825,7 +796,7 @@ export const MiscQuest: Quest = {
       priority: () => Priorities.Free,
       ready: () => haveInCampground($item`packet of rock seeds`),
       completed: () =>
-        !haveInCampground($item`milestone`) || getCampground()[$item`milestone`.name] < 1,
+        !haveInCampground($item`milestone`) || getCampground()[ $item`milestone`.name ] < 1,
       do: () => {
         visitUrl("campground.php?action=rgarden1&pwd");
         visitUrl("campground.php?action=rgarden2&pwd");
@@ -836,7 +807,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Cincho",
-      after: ["Friar/Start"],
+      after: [ "Friar/Start" ],
       priority: () => Priorities.Free,
       completed: () =>
         !have($item`Cincho de Mayo`) ||
@@ -860,7 +831,8 @@ export const MiscQuest: Quest = {
         get("timesRested") >= totalFreeRests() ||
         get("timesRested") >= 17,
       do: () => {
-        if (myMp() === myMaxmp() && myHp() === myMaxhp()) {
+        if (myMp() === myMaxmp() && myHp() === myMaxhp())
+        {
           // We cannot rest with full HP and MP, so burn 1 MP with a starting skill.
           useSkill(
             byClass({
@@ -875,11 +847,14 @@ export const MiscQuest: Quest = {
           );
         }
 
-        if (get("chateauAvailable") && !underStandard()) {
+        if (get("chateauAvailable") && !underStandard())
+        {
           visitUrl("place.php?whichplace=chateau&action=chateau_restlabelfree");
-        } else if (get("getawayCampsiteUnlocked") && !underStandard()) {
+        } else if (get("getawayCampsiteUnlocked") && !underStandard())
+        {
           visitUrl("place.php?whichplace=campaway&action=campaway_tentclick");
-        } else {
+        } else
+        {
           visitUrl("campground.php?action=rest");
         }
       },
@@ -899,10 +874,12 @@ export const MiscQuest: Quest = {
         !have($item`2002 Mr. Store Catalog`) ||
         (get("availableMrStore2002Credits") === 0 && get("_2002MrStoreCreditsCollected")),
       do: () => {
-        if (!haveLoathingIdolMicrophone()) {
+        if (!haveLoathingIdolMicrophone())
+        {
           buy($coinmaster`Mr. Store 2002`, 1, $item`Loathing Idol Microphone`);
         }
-        if (get("availableMrStore2002Credits") > 0) {
+        if (get("availableMrStore2002Credits") > 0)
+        {
           buy(
             $coinmaster`Mr. Store 2002`,
             get("availableMrStore2002Credits"),
@@ -915,7 +892,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Shadow Rift",
-      after: ["War/Open Nuns"],
+      after: [ "War/Open Nuns" ],
       completed: () =>
         !have($item`closed-circuit pay phone`) ||
         (get("_shadowAffinityToday") &&
@@ -930,7 +907,8 @@ export const MiscQuest: Quest = {
       },
       do: $location`Shadow Rift (The Misspelled Cemetary)`,
       post: (): void => {
-        if (have(ClosedCircuitPayphone.rufusTarget() as Item)) {
+        if (have(ClosedCircuitPayphone.rufusTarget() as Item))
+        {
           use($item`closed-circuit pay phone`);
         }
       },
@@ -940,7 +918,8 @@ export const MiscQuest: Quest = {
           const result = Macro.while_("hasskill 226", Macro.skill($skill`Perpetrate Mild Evil`));
           // Use all but the last extinguisher uses on polar vortex.
           const vortex_count = (get("_fireExtinguisherCharge") - 20) / 10;
-          if (vortex_count > 0) {
+          if (vortex_count > 0)
+          {
             for (let i = 0; i < vortex_count; i++)
               result.trySkill($skill`Fire Extinguisher: Polar Vortex`);
           }
@@ -971,7 +950,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Shadow Lodestone",
-      after: ["Misc/Shadow Rift"],
+      after: [ "Misc/Shadow Rift" ],
       completed: () => have($effect`Shadow Waters`) || !have($item`Rufus's shadow lodestone`),
       do: $location`Shadow Rift (The Misspelled Cemetary)`,
       choices: {
@@ -982,7 +961,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Eldritch Tentacle",
-      after: ["Keys/Star Key", "Crypt/Cranny"],
+      after: [ "Keys/Star Key", "Crypt/Cranny" ],
       ready: () => get("questL02Larva") !== "unstarted",
       completed: () => get("_eldritchTentacleFought"),
       do: () => {
@@ -1031,8 +1010,10 @@ export const MiscQuest: Quest = {
       ready: () => get("daycareOpen"),
       completed: () => get("_daycareGymScavenges") !== 0,
       do: (): void => {
-        if ((get("daycareOpen") || get("_daycareToday")) && !get("_daycareSpa")) {
-          switch (myPrimestat()) {
+        if ((get("daycareOpen") || get("_daycareToday")) && !get("_daycareSpa"))
+        {
+          switch (myPrimestat())
+          {
             case $stat`Muscle`:
               cliExecute("daycare muscle");
               break;
@@ -1108,7 +1089,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Sewer Totem",
-      after: ["Sewer Accordion"],
+      after: [ "Sewer Accordion" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= 1000,
       completed: () => have($item`turtle totem`),
@@ -1119,7 +1100,7 @@ export const MiscQuest: Quest = {
     },
     {
       name: "Sewer Saucepan",
-      after: ["Sewer Accordion", "Sewer Totem"],
+      after: [ "Sewer Accordion", "Sewer Totem" ],
       priority: () => Priorities.Free,
       ready: () => myMeat() >= 1000,
       completed: () => have($item`saucepan`),
@@ -1169,11 +1150,13 @@ export const MiscQuest: Quest = {
         have($skill`Saucegeyser`),
       priority: () => Priorities.Start,
       prepare: (): void => {
-        if (get("snojoSetting") === null) {
+        if (get("snojoSetting") === null)
+        {
           visitUrl("place.php?whichplace=snojo&action=snojo_controller");
           runChoice(primestatId());
         }
-        if (equippedAmount($item`Greatest American Pants`) > 0 && get("_gapBuffs") < 5) {
+        if (equippedAmount($item`Greatest American Pants`) > 0 && get("_gapBuffs") < 5)
+        {
           ensureEffect($effect`Super Skill`); // after GAP are equipped
         }
         cliExecute("uneffect ode to booze");
@@ -1232,7 +1215,7 @@ export const MiscQuest: Quest = {
     {
       name: "Delevel",
       priority: () => Priorities.Free,
-      after: ["Tower/Shadow"],
+      after: [ "Tower/Shadow" ],
       ready: () => myFullness() === fullnessLimit(),
       completed: () => !args.minor.delevel || !atLevel(14) || !have($item`Clan VIP Lounge key`),
       do: () => cliExecute("eat basic hot dog"),
@@ -1274,7 +1257,7 @@ export const MiscQuest: Quest = {
     {
       name: "Limit Stats",
       priority: () => Priorities.Free,
-      after: ["Tower/Start"],
+      after: [ "Tower/Start" ],
       completed: () =>
         get("nsContestants2") > -1 ||
         have($effect`Feeling Insignificant`) ||
@@ -1294,7 +1277,7 @@ export const MiscQuest: Quest = {
       ready: () =>
         BurningLeaves.have() && BurningLeaves.numberOfLeaves() >= 50 && !have($effect`Resined`),
       completed: () => step("questL12War") === 999, // Stop near the end of the run
-      acquire: [{ item: $item`distilled resin` }],
+      acquire: [ { item: $item`distilled resin` } ],
       do: () => use($item`distilled resin`),
       limit: { tries: 5, unready: true },
       freeaction: true,
@@ -1321,7 +1304,7 @@ export const WandQuest: Quest = {
     },
     {
       name: "Get Teleportitis",
-      after: ["Plus Sign"],
+      after: [ "Plus Sign" ],
       ready: () =>
         myMeat() >= 1000 && // Meat for goal teleportitis choice adventure
         have($item`soft green echo eyedrop antidote`) && // Antitdote to remove teleportitis afterwards
@@ -1334,7 +1317,7 @@ export const WandQuest: Quest = {
     },
     {
       name: "Mimic",
-      after: ["Get Teleportitis"],
+      after: [ "Get Teleportitis" ],
       ready: () => myMeat() >= 5000,
       completed: () =>
         have($item`dead mimic`) ||
@@ -1359,7 +1342,7 @@ export const WandQuest: Quest = {
     },
     {
       name: "Wand",
-      after: ["Mimic"],
+      after: [ "Mimic" ],
       completed: () =>
         get("lastZapperWand") === myAscensions() ||
         have($item`aluminum wand`) ||
@@ -1380,39 +1363,42 @@ export function teleportitisTask(engine: Engine, tasks: Task[]): Task {
   // Where multiple tasks make different choices at the same choice, prefer:
   //  * Earlier tasks to later tasks
   //  * Uncompleted tasks to completed tasks
-  const choices: Task["choices"] = { 3: 3 }; // The goal choice
+  const choices: Task[ "choices" ] = { 3: 3 }; // The goal choice
 
   const done_tasks = tasks.filter((task) => task.completed());
   const left_tasks = tasks.filter((task) => !task.completed());
-  for (const task of [...left_tasks, ...done_tasks].reverse()) {
+  for (const task of [ ...left_tasks, ...done_tasks ].reverse())
+  {
     const task_choices = undelay(task.choices);
-    for (const choice_id_str in task_choices) {
+    for (const choice_id_str in task_choices)
+    {
       const choice_id = parseInt(choice_id_str);
-      choices[choice_id] = task_choices[choice_id];
+      choices[ choice_id ] = task_choices[ choice_id ];
     }
   }
 
   // Escape the hidden city alters
-  choices[781] = 6;
-  choices[783] = 6;
-  choices[785] = 6;
-  choices[787] = 6;
-  if (step("questL11Worship") >= 3) {
+  choices[ 781 ] = 6;
+  choices[ 783 ] = 6;
+  choices[ 785 ] = 6;
+  choices[ 787 ] = 6;
+  if (step("questL11Worship") >= 3)
+  {
     // Escape the hidden heart of the hidden temple
-    choices[580] = 3;
+    choices[ 580 ] = 3;
   }
   // Exit NEP intro choice
-  choices[1322] = 6;
+  choices[ 1322 ] = 6;
   // Leave the gingerbread city clock alone
-  choices[1215] = 2;
+  choices[ 1215 ] = 2;
   // Leave the daily dungeon alone
-  choices[689] = 1;
-  choices[690] = 3;
-  choices[691] = 3;
-  choices[692] = 8;
-  choices[693] = 3;
+  choices[ 689 ] = 1;
+  choices[ 690 ] = 3;
+  choices[ 691 ] = 3;
+  choices[ 692 ] = 8;
+  choices[ 693 ] = 3;
   // Leave the shore alone
-  choices[793] = 4;
+  choices[ 793 ] = 4;
 
   const combat = new CombatStrategy();
   const haiku_monsters = [
@@ -1426,7 +1412,7 @@ export function teleportitisTask(engine: Engine, tasks: Task[]): Task {
 
   return {
     name: "Teleportitis",
-    after: ["Wand/Get Teleportitis"],
+    after: [ "Wand/Get Teleportitis" ],
     ready: () => have($effect`Teleportitis`),
     completed: () => get("lastPlusSignUnlock") === myAscensions(),
     do: $location`The Enormous Greater-Than Sign`,
@@ -1457,7 +1443,8 @@ export const removeTeleportitis = {
 
 export function haveOre() {
   if (step("questL08Trapper") >= 2) return true;
-  if (get("trapperOre") !== "") {
+  if (get("trapperOre") !== "")
+  {
     return itemAmount(Item.get(get("trapperOre"))) >= 3;
   }
   return (
@@ -1465,51 +1452,4 @@ export function haveOre() {
     itemAmount($item`chrome ore`) >= 3 &&
     itemAmount($item`linoleum ore`) >= 3
   );
-}
-
-function willWorkshedSwap() {
-  return false; // Cold medicine cabinet does not currently finish
-}
-
-export function trainSetAvailable() {
-  if (getWorkshed() === $item`model train set`) return true;
-  if (!have($item`model train set`)) return false;
-  if (getWorkshed() === $item`none` && args.major.workshed === $item`model train set`) return true;
-  if (args.major.swapworkshed === $item`model train set` && willWorkshedSwap()) return true;
-  return false;
-}
-
-function getDesiredTrainsetConfig(): TrainsetPiece[] {
-  const statPiece = byStat({
-    Muscle: TrainsetPiece.MUS_STATS,
-    Mysticality: TrainsetPiece.MYS_STATS,
-    Moxie: TrainsetPiece.MOXIE_STATS,
-  });
-
-  const config: TrainsetPiece[] = [];
-  config.push(TrainsetPiece.DOUBLE_NEXT_STATION);
-  if (!have($item`designer sweatpants`)) {
-    config.push(TrainsetPiece.EFFECT_MP);
-  } else if (myLevel() < 5) {
-    config.push(statPiece);
-  }
-
-  config.push(TrainsetPiece.SMUT_BRIDGE_OR_STATS);
-  config.push(TrainsetPiece.GAIN_MEAT);
-
-  if (myLevel() < 12 && !config.includes(statPiece)) {
-    config.push(statPiece);
-  }
-
-  if (!config.includes(TrainsetPiece.EFFECT_MP)) {
-    config.push(TrainsetPiece.EFFECT_MP);
-  }
-  if (!haveOre()) config.push(TrainsetPiece.ORE);
-
-  config.push(TrainsetPiece.HOT_RES_COLD_DMG);
-  config.push(TrainsetPiece.STENCH_RES_SPOOKY_DMG);
-  config.push(TrainsetPiece.DROP_LAST_FOOD_OR_RANDOM);
-  config.push(TrainsetPiece.RANDOM_BOOZE);
-  config.push(TrainsetPiece.CANDY);
-  return config.slice(0, 8);
 }

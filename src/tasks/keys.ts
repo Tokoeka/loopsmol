@@ -16,7 +16,6 @@ import {
   runChoice,
   storageAmount,
   totalTurnsPlayed,
-  useSkill,
   visitUrl,
 } from "kolmafia";
 import {
@@ -44,7 +43,6 @@ import { Quest, Task } from "../engine/task";
 import { step } from "grimoire-kolmafia";
 import { Priorities } from "../engine/priority";
 import { args } from "../args";
-import { trainSetAvailable } from "./misc";
 import { atLevel, haveFlorest, underStandard } from "../lib";
 import { ensureWithMPSwaps } from "../engine/moods";
 
@@ -70,25 +68,10 @@ const heroKeys: KeyTask[] = [
     do: () => {
       cliExecute("cheat tower");
       if (get("_deckCardsDrawn") <= 10) cliExecute("cheat sheep");
-      if (get("_deckCardsDrawn") <= 10) {
-        if (trainSetAvailable()) cliExecute("cheat island");
-        else cliExecute("cheat mine");
+      if (get("_deckCardsDrawn") <= 10)
+      {
+        cliExecute("cheat mine");
       }
-    },
-    limit: { tries: 1 },
-    freeaction: true,
-  },
-  {
-    which: Keys.Lockpicking,
-    possible: () => have($skill`Lock Picking`) && !get("lockPicked"),
-    after: [],
-    priority: () => Priorities.Free,
-    completed: () => !have($skill`Lock Picking`) || get("lockPicked"),
-    do: () => useSkill($skill`Lock Picking`),
-    choices: () => {
-      return {
-        1414: have($item`Boris's key`) ? (have($item`Jarlsberg's key`) ? 3 : 2) : 1,
-      };
     },
     limit: { tries: 1 },
     freeaction: true,
@@ -106,14 +89,14 @@ const heroKeys: KeyTask[] = [
         have($item`ring of Detect Boring Doors`) &&
         have($item`eleven-foot pole`)),
     completed: () => get("dailyDungeonDone"),
-    after: ["Daily Dungeon Malware"],
+    after: [ "Daily Dungeon Malware" ],
     ...dailyDungeonTask(),
   },
   {
     which: Keys.Dungeon,
     possible: () => !get("dailyDungeonDone"),
     completed: () => get("dailyDungeonDone"),
-    after: ["Daily Dungeon Malware", "Daily Dungeon Candy Cane"],
+    after: [ "Daily Dungeon Malware", "Daily Dungeon Candy Cane" ],
     ...dailyDungeonTask(),
   },
   {
@@ -132,7 +115,7 @@ const heroKeys: KeyTask[] = [
   {
     which: Keys.Fantasy,
     possible: () => (get("frAlways") || get("_frToday")) && !underStandard(),
-    after: ["Misc/Open Fantasy"],
+    after: [ "Misc/Open Fantasy" ],
     completed: () => $location`The Bandit Crossroads`.turnsSpent >= 5,
     do: $location`The Bandit Crossroads`,
     outfit: {
@@ -146,7 +129,7 @@ const heroKeys: KeyTask[] = [
   {
     which: Keys.Zap,
     possible: () => get("lastZapperWandExplosionDay") <= 0,
-    after: ["Wand/Wand", "Pull/Key Zappable"],
+    after: [ "Wand/Wand", "Pull/Key Zappable" ],
     completed: () => get("lastZapperWandExplosionDay") >= 1 || get("_zapCount") >= 1,
     do: () => {
       unequipAcc(keyStrategy.getZapChoice(0));
@@ -160,7 +143,7 @@ const heroKeys: KeyTask[] = [
   {
     which: Keys.Zap2,
     possible: () => get("lastZapperWandExplosionDay") <= 0,
-    after: ["Wand/Wand", "Keys/Zap", "Pull/Key Zappable 2"],
+    after: [ "Wand/Wand", "Keys/Zap", "Pull/Key Zappable 2" ],
     completed: () => get("lastZapperWandExplosionDay") >= 1 || get("_zapCount") >= 2,
     do: () => {
       unequipAcc(keyStrategy.getZapChoice(1));
@@ -238,14 +221,17 @@ class KeyStrategy {
 
     let sureKeys = 0; // Number of keys we have definitely planned.
     let maybeKeys = 0; // Number of keys we plan to attempt if possible.
-    for (const task of this.tasks) {
+    for (const task of this.tasks)
+    {
       // If we have already guaranteed all keys, no more are needed
-      if (sureKeys >= keysNeeded) {
+      if (sureKeys >= keysNeeded)
+      {
         this.plan.set(task.which, KeyState.UNNEEDED);
         continue;
       }
 
-      switch (task.possible()) {
+      switch (task.possible())
+      {
         case false:
           // This key is impossible to get.
           this.plan.set(task.which, KeyState.IMPOSSIBLE);
@@ -264,7 +250,8 @@ class KeyStrategy {
       }
     }
 
-    if (sureKeys < keysNeeded && !args.debug.ignorekeys) {
+    if (sureKeys < keysNeeded && !args.debug.ignorekeys)
+    {
       const info = Array.from(this.plan.entries())
         .map((keyinfo) => keyinfo.join("="))
         .join("; ");
@@ -279,10 +266,11 @@ class KeyStrategy {
   }
 
   public getZapChoice(which: 0 | 1): Item {
-    if (!this.zap_choice) {
+    if (!this.zap_choice)
+    {
       this.zap_choice = makeZapChoice();
     }
-    return this.zap_choice[which];
+    return this.zap_choice[ which ];
   }
 }
 export const keyStrategy = new KeyStrategy(heroKeys);
@@ -316,7 +304,7 @@ export const KeysQuest: Quest = {
     },
     {
       name: "Star Key",
-      after: ["Giant/Unlock HITS"],
+      after: [ "Giant/Unlock HITS" ],
       completed: () =>
         (have($item`star chart`) && itemAmount($item`star`) >= 8 && itemAmount($item`line`) >= 7) ||
         have($item`Richard's star key`) ||
@@ -325,13 +313,14 @@ export const KeysQuest: Quest = {
       outfit: { modifier: "item", avoid: $items`broken champagne bottle` },
       combat: new CombatStrategy().kill($monster`Astronomer`).killItem(),
       limit: { soft: 20 },
-      orbtargets: () => (!have($item`star chart`) ? [$monster`Astronomer`] : []),
+      orbtargets: () => (!have($item`star chart`) ? [ $monster`Astronomer` ] : []),
     },
     {
       name: "Skeleton Key",
-      after: ["Crypt/Nook Boss", "Tower/Start"],
+      after: [ "Crypt/Nook Boss", "Tower/Start" ],
       prepare: () => {
-        if (step("questM23Meatsmith") === -1) {
+        if (step("questM23Meatsmith") === -1)
+        {
           visitUrl("shop.php?whichshop=meatsmith");
           visitUrl("shop.php?whichshop=meatsmith&action=talk");
           runChoice(1);
@@ -356,7 +345,7 @@ export const DigitalQuest: Quest = {
   tasks: [
     {
       name: "Open",
-      after: ["Mosquito/Start"],
+      after: [ "Mosquito/Start" ],
       completed: () => have($item`continuum transfunctioner`),
       priority: () => Priorities.Free,
       do: () => {
@@ -371,7 +360,7 @@ export const DigitalQuest: Quest = {
     },
     {
       name: "Fungus",
-      after: ["Open"],
+      after: [ "Open" ],
       completed: () => getScore() >= 10000,
       ready: () => get("8BitColor", "black") === "red",
       do: $location`The Fungus Plains`,
@@ -381,10 +370,11 @@ export const DigitalQuest: Quest = {
     },
     {
       name: "Vanya",
-      after: ["Open"],
+      after: [ "Open" ],
       completed: () => getScore() >= 10000,
       prepare: () => {
-        if (numericModifier("Initiative") < 600 && have($skill`Silent Hunter`)) {
+        if (numericModifier("Initiative") < 600 && have($skill`Silent Hunter`))
+        {
           if (myClass() === $class`Seal Clubber`) ensureWithMPSwaps($effects`Silent Hunting`);
           else ensureWithMPSwaps($effects`Nearly Silent Hunting`);
         }
@@ -393,7 +383,8 @@ export const DigitalQuest: Quest = {
           have($item`designer sweatpants`) &&
           get("sweat", 0) >= 90 &&
           numericModifier("Initiative") < 600
-        ) {
+        )
+        {
           // Use visit URL to avoid needing to equip the pants
           visitUrl("runskillz.php?action=Skillz&whichskill=7419&targetplayer=0&pwd&quantity=1");
         }
@@ -427,11 +418,12 @@ export const DigitalQuest: Quest = {
     },
     {
       name: "Megalo",
-      after: ["Open"],
+      after: [ "Open" ],
       completed: () => getScore() >= 10000,
       prepare: () => {
         // Get the GAP DA buff, saving 1 for after the run
-        if (haveEquipped($item`Greatest American Pants`) && get("_gapBuffs") < 4) {
+        if (haveEquipped($item`Greatest American Pants`) && get("_gapBuffs") < 4)
+        {
           ensureEffect($effect`Super Structure`); // after GAP are equipped
         }
       },
@@ -451,12 +443,13 @@ export const DigitalQuest: Quest = {
     },
     {
       name: "Hero",
-      after: ["Open"],
+      after: [ "Open" ],
       completed: () => getScore() >= 10000,
       ready: () => get("8BitColor", "black") === "green",
       do: $location`Hero's Field`,
       post: () => {
-        if (haveFlorest() && FloristFriar.Rutabeggar.available()) {
+        if (haveFlorest() && FloristFriar.Rutabeggar.available())
+        {
           FloristFriar.Rutabeggar.plant();
         }
       },
@@ -474,11 +467,12 @@ export const DigitalQuest: Quest = {
     },
     {
       name: "Key",
-      after: ["Open", "Fungus", "Vanya", "Megalo", "Hero"],
+      after: [ "Open", "Fungus", "Vanya", "Megalo", "Hero" ],
       completed: () =>
         have($item`digital key`) || get("nsTowerDoorKeysUsed").includes("digital key"),
       do: () => {
-        if (getScore() >= 10000) {
+        if (getScore() >= 10000)
+        {
           visitUrl("place.php?whichplace=8bit&action=8treasure");
           runChoice(1);
         }
@@ -499,7 +493,8 @@ function keyCount(): number {
 
 function unequipAcc(acc: Item): void {
   if (!haveEquipped(acc)) return;
-  for (const slot of $slots`acc1, acc2, acc3`) {
+  for (const slot of $slots`acc1, acc2, acc3`)
+  {
     if (equippedItem(slot) === acc) equip(slot, $item`none`);
   }
 }

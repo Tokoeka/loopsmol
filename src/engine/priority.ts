@@ -7,7 +7,6 @@ import {
   $effect,
   $item,
   $location,
-  $skill,
   get,
   getTodaysHolidayWanderers,
   have,
@@ -46,7 +45,6 @@ export class Priorities {
   static None: Priority = { score: 0 };
   static BadForcingNC: Priority = { score: -0.4, reason: "Not forcing NC" };
   static BadAutumnaton: Priority = { score: -2, reason: "Autumnaton in use here" };
-  static BadTrain: Priority = { score: -3, reason: "Use Trainset" };
   static BadOrb: Priority = { score: -4, reason: "Avoid orb monster" };
   static BadCamel: Priority = { score: -5, reason: "Waiting for Melodramedary" };
   static BadHoliday: Priority = { score: -10 };
@@ -70,9 +68,11 @@ export class Prioritization {
   static from(task: Task): Prioritization {
     const result = new Prioritization();
     const base = task.priority?.() ?? Priorities.None;
-    if (Array.isArray(base)) {
+    if (Array.isArray(base))
+    {
       for (const priority of base) result.priorities.add(priority);
-    } else {
+    } else
+    {
       if (base !== Priorities.None) result.priorities.add(base);
     }
 
@@ -80,17 +80,20 @@ export class Prioritization {
     const yr_needed =
       task.combat?.can("yellowRay") ||
       (task.combat?.can("forceItems") && !forceItemSources.find((s) => s.available()));
-    if (yr_needed && yellowRaySources.find((yr) => yr.available())) {
-      if (have($effect`Everything Looks Yellow`)) {
-        if (!have($skill`Emotionally Chipped`) || get("_feelEnvyUsed") === 3)
-          result.priorities.add(Priorities.BadYR);
+    if (yr_needed && yellowRaySources.find((yr) => yr.available()))
+    {
+      if (have($effect`Everything Looks Yellow`))
+      {
+        result.priorities.add(Priorities.BadYR);
       } else result.priorities.add(Priorities.GoodYR);
     }
 
     // Dodge useless monsters with the orb
-    if (task.do instanceof Location) {
+    if (task.do instanceof Location)
+    {
       const next_monster = globalStateCache.orb().prediction(task.do);
-      if (next_monster !== undefined) {
+      if (next_monster !== undefined)
+      {
         result.orb_monster = next_monster;
         result.priorities.add(orbPriority(task, next_monster));
       }
@@ -99,7 +102,8 @@ export class Prioritization {
     // Ensure that the current +/- combat effects are compatible
     //  (Macguffin/Forest is tough and doesn't need much +combat; just power though)
     const modifier = getModifiersFrom(undelay(task.outfit));
-    if (!moodCompatible(modifier) && task.name !== "Macguffin/Forest") {
+    if (!moodCompatible(modifier) && task.name !== "Macguffin/Forest")
+    {
       result.priorities.add(Priorities.BadMood);
     }
 
@@ -108,12 +112,14 @@ export class Prioritization {
       (have($effect`Prestidigysfunction`) || have($effect`Turned Into a Skeleton`)) &&
       task.combat &&
       task.combat.can("killItem")
-    ) {
+    )
+    {
       result.priorities.add(Priorities.BadMood);
     }
 
     // If we have already used banishes in the zone, prefer it
-    if (!task?.ignore_banishes?.()) {
+    if (!task?.ignore_banishes?.())
+    {
       const numBanished = globalStateCache.banishes().numPartiallyBanished(task);
       if (numBanished === 1) result.priorities.add(Priorities.GoodBanish);
       else if (numBanished === 2) result.priorities.add(Priorities.GoodBanish2);
@@ -121,17 +127,22 @@ export class Prioritization {
     }
 
     // Avoid ML boosting zones when a scaling holiday wanderer is due
-    if (modifier?.includes("ML") && !modifier.match("-[\\d .]*ML")) {
-      if (getTodaysHolidayWanderers().length > 0 && getCounter("holiday") <= 0) {
+    if (modifier?.includes("ML") && !modifier.match("-[\\d .]*ML"))
+    {
+      if (getTodaysHolidayWanderers().length > 0 && getCounter("holiday") <= 0)
+      {
         result.priorities.add(Priorities.BadHoliday);
       }
     }
 
     // Handle potential NC forcers in a zone
-    if (undelay(task.ncforce)) {
-      if (get("noncombatForcerActive")) {
+    if (undelay(task.ncforce))
+    {
+      if (get("noncombatForcerActive"))
+      {
         result.priorities.add(Priorities.GoodForceNC);
-      } else if (forceNCPossible()) {
+      } else if (forceNCPossible())
+      {
         result.priorities.add(Priorities.BadForcingNC);
       }
     }
@@ -174,7 +185,8 @@ export class Prioritization {
       task.do instanceof Location && location_blacklist.includes(task.do);
     const location_in_whitelist =
       task.do instanceof Location && location_whitelist.includes(task.do);
-    if (have($item`cosmic bowling ball`) || get("cosmicBowlingBallReturnCombats") === 0) {
+    if (have($item`cosmic bowling ball`) || get("cosmicBowlingBallReturnCombats") === 0)
+    {
       if (
         location_in_whitelist ||
         (!task.freeaction &&
@@ -182,7 +194,8 @@ export class Prioritization {
           ball_useful &&
           !ball_may_not_be_useful &&
           !location_in_blacklist)
-      ) {
+      )
+      {
         result.priorities.add(Priorities.CosmicBowlingBall);
       }
     }
@@ -191,7 +204,7 @@ export class Prioritization {
   }
 
   public explain(): string {
-    const result = [...this.priorities]
+    const result = [ ...this.priorities ]
       .map((priority) => priority.reason)
       .filter((priority) => priority !== undefined)
       .join(", ");
@@ -200,7 +213,7 @@ export class Prioritization {
   }
 
   public explainWithColor(): string | undefined {
-    const result = [...this.priorities]
+    const result = [ ...this.priorities ]
       .map((priority) => {
         if (priority.reason === undefined) return undefined;
         if (priority.score > 0) return `<font color='blue'>${priority.reason}</font>,`;
@@ -217,7 +230,8 @@ export class Prioritization {
   }
 
   public has(priorty: Priority) {
-    for (const prior of this.priorities) {
+    for (const prior of this.priorities)
+    {
       if (prior.score === priorty.score) return true;
     }
     return false;
@@ -225,7 +239,8 @@ export class Prioritization {
 
   public score(): number {
     let result = 0;
-    for (const priority of this.priorities) {
+    for (const priority of this.priorities)
+    {
       result += priority.score;
     }
     return result;
@@ -236,7 +251,8 @@ function orbPriority(task: Task, monster: Monster): Priority {
   if (!(task.do instanceof Location)) return Priorities.None;
 
   // Determine if a monster is useful or not based on the combat goals
-  if (task.orbtargets === undefined) {
+  if (task.orbtargets === undefined)
+  {
     const task_combat = task.combat ?? new CombatStrategy();
     const next_monster_strategy = task_combat.currentStrategy(monster);
 
@@ -260,11 +276,14 @@ function orbPriority(task: Task, monster: Monster): Priority {
       task_combat.can("killHard") ||
       task_combat.can("killItem");
 
-    if (next_useless && others_useful) {
+    if (next_useless && others_useful)
+    {
       return Priorities.BadOrb;
-    } else if (!next_useless && others_useless) {
+    } else if (!next_useless && others_useless)
+    {
       return Priorities.GoodOrb;
-    } else {
+    } else
+    {
       return Priorities.None;
     }
   }
@@ -273,9 +292,11 @@ function orbPriority(task: Task, monster: Monster): Priority {
   const targets = task.orbtargets();
   if (targets === undefined) return Priorities.None;
   if (targets.length === 0) return Priorities.None;
-  if (targets.find((t) => t === monster) === undefined) {
+  if (targets.find((t) => t === monster) === undefined)
+  {
     return Priorities.BadOrb;
-  } else {
+  } else
+  {
     return Priorities.GoodOrb;
   }
 }

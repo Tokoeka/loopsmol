@@ -35,22 +35,13 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Get Bean",
-      after: ["Bat/Use Sonar 2"],
+      after: [ "Bat/Use Sonar 2" ],
       completed: () => have($item`enchanted bean`) || step("questL10Garbage") >= 1,
       do: $location`The Beanbat Chamber`,
       outfit: {
         modifier: "item",
         equip: $items`miniature crystal ball`,
         avoid: $items`broken champagne bottle`,
-      },
-      map_the_monster: () => {
-        if (
-          have($familiar`Patriotic Eagle`) &&
-          have($skill`Gallapagosian Mating Call`) &&
-          have($skill`Map the Monsters`)
-        )
-          return $monster`none`; // Save for GROPS
-        return $monster`beanbat`;
       },
       combat: new CombatStrategy()
         .banish($monsters`magical fruit bat, musical fruit bat`)
@@ -59,7 +50,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Grow Beanstalk",
-      after: ["Start", "Get Bean"],
+      after: [ "Start", "Get Bean" ],
       completed: () => step("questL10Garbage") >= 1,
       do: () => use($item`enchanted bean`),
       limit: { tries: 1 },
@@ -67,7 +58,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Airship YR Healer",
-      after: ["Grow Beanstalk"],
+      after: [ "Grow Beanstalk" ],
       completed: () => have($item`amulet of extreme plot significance`),
       do: $location`The Penultimate Fantasy Airship`,
       choices: () => {
@@ -77,10 +68,12 @@ export const GiantQuest: Quest = {
         if (have($effect`Temporary Amnesia`)) cliExecute("uneffect Temporary Amnesia");
       },
       orbtargets: () => {
-        if (have($item`Fourth of May Cosplay Saber`)) {
+        if (have($item`Fourth of May Cosplay Saber`))
+        {
           if (have($item`Mohawk wig`)) return $monsters`Quiet Healer`;
           else return $monsters`Quiet Healer, Burly Sidekick`;
-        } else {
+        } else
+        {
           return undefined; // Avoid orb dancing if we are using a real YR
         }
       },
@@ -99,8 +92,8 @@ export const GiantQuest: Quest = {
         .macro(
           () =>
             have($item`Mohawk wig`) ||
-            !have($skill`Emotionally Chipped`) ||
-            get("_feelEnvyUsed") >= 3
+              !have($skill`Emotionally Chipped`) ||
+              get("_feelEnvyUsed") >= 3
               ? new Macro()
               : Macro.skill($skill`Feel Envy`).step(killMacro()),
           $monster`Burly Sidekick`
@@ -109,7 +102,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Airship",
-      after: ["Airship YR Healer"],
+      after: [ "Airship YR Healer" ],
       completed: () => have($item`S.O.C.K.`),
       do: $location`The Penultimate Fantasy Airship`,
       choices: () => {
@@ -133,7 +126,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Basement Search",
-      after: ["Airship"],
+      after: [ "Airship" ],
       completed: () =>
         containsText(
           $location`The Castle in the Clouds in the Sky (Basement)`.noncombatQueue,
@@ -141,7 +134,8 @@ export const GiantQuest: Quest = {
         ) || step("questL10Garbage") >= 8,
       do: $location`The Castle in the Clouds in the Sky (Basement)`,
       outfit: () => {
-        if (!have($effect`Citizen of a Zone`) && have($familiar`Patriotic Eagle`)) {
+        if (!have($effect`Citizen of a Zone`) && have($familiar`Patriotic Eagle`))
+        {
           return { modifier: "-combat", familiar: $familiar`Patriotic Eagle` };
         }
         return { modifier: "-combat" };
@@ -155,7 +149,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Basement Finish",
-      after: ["Basement Search"],
+      after: [ "Basement Search" ],
       completed: () => step("questL10Garbage") >= 8,
       do: $location`The Castle in the Clouds in the Sky (Basement)`,
       outfit: { equip: $items`amulet of extreme plot significance` },
@@ -164,7 +158,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Ground",
-      after: ["Basement Finish"],
+      after: [ "Basement Finish" ],
       completed: () => step("questL10Garbage") >= 9,
       do: $location`The Castle in the Clouds in the Sky (Ground Floor)`,
       choices: { 672: 3, 673: 3, 674: 3, 1026: 2 },
@@ -177,7 +171,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Ground Knife",
-      after: ["Ground", "Tower/Wall of Meat"],
+      after: [ "Ground", "Tower/Wall of Meat" ],
       completed: () =>
         have($item`electric boning knife`) ||
         step("questL13Final") > 8 ||
@@ -192,7 +186,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Top Floor",
-      after: ["Ground"],
+      after: [ "Ground" ],
       completed: () => step("questL10Garbage") >= 10,
       do: $location`The Castle in the Clouds in the Sky (Top Floor)`,
       outfit: { equip: $items`Mohawk wig`, modifier: "-combat" },
@@ -212,7 +206,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Finish",
-      after: ["Top Floor"],
+      after: [ "Top Floor" ],
       priority: () => (councilSafe() ? Priorities.Free : Priorities.BadMood),
       completed: () => step("questL10Garbage") === 999,
       do: () => visitUrl("council.php"),
@@ -221,7 +215,7 @@ export const GiantQuest: Quest = {
     },
     {
       name: "Unlock HITS",
-      after: ["Top Floor"],
+      after: [ "Top Floor" ],
       completed: () =>
         have($item`steam-powered model rocketship`) ||
         (have($item`star chart`) && itemAmount($item`star`) >= 8 && itemAmount($item`line`) >= 7) ||

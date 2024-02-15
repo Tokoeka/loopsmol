@@ -4,12 +4,10 @@ import {
   availableAmount,
   canAdventure,
   choiceFollowsFight,
-  descToItem,
   Effect,
   equip,
   equippedItem,
   familiarEquippedEquipment,
-  getWorkshed,
   haveEffect,
   haveEquipped,
   inMultiFight,
@@ -31,10 +29,8 @@ import {
   restoreHp,
   runCombat,
   Slot,
-  totalTurnsPlayed,
   toUrl,
   use,
-  useSkill,
   visitUrl,
 } from "kolmafia";
 import { Task } from "./task";
@@ -54,7 +50,6 @@ import {
   have,
   Macro,
   PropertiesManager,
-  set,
   undelay,
   uneffect,
 } from "libram";
@@ -62,7 +57,6 @@ import {
   Engine as BaseEngine,
   CombatResources,
   CombatStrategy,
-  lastEncounterWasWanderingNC,
   Outfit,
 } from "grimoire-kolmafia";
 import { CombatActions, MyActionDefaults } from "./combat";
@@ -147,10 +141,12 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     });
     super(tasks, { combat_defaults: new MyActionDefaults() });
 
-    for (const task of ignore_set) {
+    for (const task of ignore_set)
+    {
       if (!this.tasks_by_name.has(task)) debug(`Warning: Unknown ignoretask ${task}`);
     }
-    for (const task of completed_set) {
+    for (const task of completed_set)
+    {
       if (!this.tasks_by_name.has(task)) debug(`Warning: Unknown completedtask ${task}`);
     }
   }
@@ -168,9 +164,11 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     if (myPath() !== $path`A Shrunken Adventurer am I`) return undefined; // Prism broken
 
     // Teleportitis overrides all
-    if (have($effect`Teleportitis`)) {
+    if (have($effect`Teleportitis`))
+    {
       const teleportitis = teleportitisTask(this, this.tasks);
-      if (teleportitis.completed() && removeTeleportitis.ready()) {
+      if (teleportitis.completed() && removeTeleportitis.ready())
+      {
         return {
           ...removeTeleportitis,
           active_priority: Prioritization.fixed(Priorities.Always),
@@ -184,7 +182,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       const priority = task.priority?.();
       return priority === Priorities.LastCopyableMonster || priority === Priorities.Free;
     });
-    if (priority !== undefined) {
+    if (priority !== undefined)
+    {
       return {
         ...priority,
       };
@@ -194,29 +193,34 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     const backup = backupTargets.find(
       (target) => !target.completed() && target.monster === get("lastCopyableMonster")
     );
-    if (backup && have($item`backup camera`)) {
+    if (backup && have($item`backup camera`))
+    {
       const backup_outfit = undelay(backup.outfit) ?? {};
       if ("equip" in backup_outfit) backup_outfit.equip?.push($item`backup camera`);
-      else backup_outfit.equip = [$item`backup camera`];
+      else backup_outfit.equip = [ $item`backup camera` ];
 
       const possible_locations = available_tasks.filter(
         (task) => this.hasDelay(task) && this.createOutfit(task).canEquip(backup_outfit)
       );
-      if (possible_locations.length > 0) {
-        if (args.debug.verbose) {
+      if (possible_locations.length > 0)
+      {
+        if (args.debug.verbose)
+        {
           printHtml(
             `A backup target (${backup.monster}) is available to place in a delay zone. Available zones:`
           );
-          for (const task of possible_locations) {
+          for (const task of possible_locations)
+          {
             printHtml(`${task.name}`);
           }
         }
         return {
-          ...possible_locations[0],
+          ...possible_locations[ 0 ],
           active_priority: Prioritization.fixed(Priorities.Wanderer),
           backup: backup,
         };
-      } else {
+      } else
+      {
         logprint(`Backup ${backup.monster} is ready but no tasks have delay`);
         if (backup.monster !== $monster`Eldritch Tentacle`)
           return {
@@ -230,25 +234,30 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
 
     // If a wanderer is up try to place it in a useful location
     const wanderer = wandererSources.find((source) => source.available() && source.chance() === 1);
-    if (wanderer) {
+    if (wanderer)
+    {
       const possible_locations = available_tasks.filter(
         (task) => this.hasDelay(task) && canEquipResource(this.createOutfit(task), wanderer)
       );
-      if (possible_locations.length > 0) {
-        if (args.debug.verbose) {
+      if (possible_locations.length > 0)
+      {
+        if (args.debug.verbose)
+        {
           printHtml(
             `A wanderer (${wanderer.name}) is available to place in a delay zone. Available zones:`
           );
-          for (const task of possible_locations) {
+          for (const task of possible_locations)
+          {
             printHtml(`${task.name}`);
           }
         }
         return {
-          ...possible_locations[0],
+          ...possible_locations[ 0 ],
           active_priority: Prioritization.fixed(Priorities.Wanderer),
           wanderer: wanderer,
         };
-      } else {
+      } else
+      {
         logprint(`Wanderer ${wanderer.name} is ready but no tasks have delay`);
       }
     }
@@ -260,10 +269,11 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
 
     // Sort tasks in a stable way, by priority and then by route
     const scored_tasks: ScoredTask[] = [];
-    for (let i = 0; i < task_priorities.length; i++) {
+    for (let i = 0; i < task_priorities.length; i++)
+    {
       scored_tasks.push({
-        task: task_priorities[i],
-        score: task_priorities[i].active_priority.score(),
+        task: task_priorities[ i ],
+        score: task_priorities[ i ].active_priority.score(),
         index: i,
       });
     }
@@ -271,10 +281,12 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       if (a.score === b.score) return a.index - b.index;
       return b.score - a.score;
     });
-    if (args.debug.verbose) {
+    if (args.debug.verbose)
+    {
       printHtml("");
       printHtml("Available Tasks:");
-      for (const scored_task of scored_tasks) {
+      for (const scored_task of scored_tasks)
+      {
         const name = scored_task.task.name;
         const reason = scored_task.task.active_priority?.explainWithColor() ?? "Available";
         const score = scored_task.score;
@@ -282,7 +294,7 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       }
       printHtml("");
     }
-    if (scored_tasks.length > 0) return scored_tasks[0].task;
+    if (scored_tasks.length > 0) return scored_tasks[ 0 ].task;
 
     // No next task
     return undefined;
@@ -297,15 +309,20 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     if (myAdventures() < args.debug.halt) throw `Running out of adventures!`;
     super.execute(task);
 
-    if (task.completed()) {
+    if (task.completed())
+    {
       debug(`${task.name} completed!`, "blue");
-    } else if (!(task.ready?.() ?? true)) {
+    } else if (!(task.ready?.() ?? true))
+    {
       debug(`${task.name} not completed! [Again? Not ready]`, "blue");
-    } else {
+    } else
+    {
       const priority_explain = Prioritization.from(task).explain();
-      if (priority_explain !== "") {
+      if (priority_explain !== "")
+      {
         debug(`${task.name} not completed! [Again? ${priority_explain}]`, "blue");
-      } else {
+      } else
+      {
         debug(`${task.name} not completed!`, "blue");
       }
     }
@@ -317,14 +334,16 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     combat: CombatStrategy<CombatActions>,
     resources: CombatResources<CombatActions>
   ): void {
-    const wanderers = task.wanderer ? [task.wanderer] : [];
-    for (const wanderer of wanderers) {
-      if (!equipFirst(outfit, [wanderer]))
+    const wanderers = task.wanderer ? [ task.wanderer ] : [];
+    for (const wanderer of wanderers)
+    {
+      if (!equipFirst(outfit, [ wanderer ]))
         throw `Wanderer equipment ${wanderer.equip} conflicts with ${task.name}`;
     }
 
     // Setup a backup
-    if (task.backup) {
+    if (task.backup)
+    {
       if (!outfit.equip($item`backup camera`)) throw `Cannot force backup camera on ${task.name}`;
       if (task.backup.outfit && !outfit.equip(undelay(task.backup.outfit)))
         throw `Cannot match equip for backup ${task.backup.monster} on ${task.name}`;
@@ -335,7 +354,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       combat.action("killHard");
     }
 
-    if (undelay(task.freeaction)) {
+    if (undelay(task.freeaction))
+    {
       // Prepare only as requested by the task
       return;
     }
@@ -368,7 +388,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       !flyersDone() &&
       (!(task.do instanceof Location) || !blacklist.has(task.do)) &&
       task.name !== "Misc/Protonic Ghost"
-    ) {
+    )
+    {
       combat.macro(
         new Macro().if_(
           `!hpbelow 50 && ${monster_blacklist.map((m) => `!monsterid ${m.id}`).join(" && ")}`,
@@ -385,18 +406,22 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       myFullness() === 0 &&
       myTurncount() > 1 &&
       !have($effect`Everything Looks Red`)
-    ) {
+    )
+    {
       combat.macro(new Macro().tryItem($item`red rocket`), undefined, true);
     }
 
-    if (wanderers.length === 0) {
+    if (wanderers.length === 0)
+    {
       // Set up a banish if needed
 
-      if (combat.can("yellowRay") && !have($effect`Everything Looks Yellow`)) {
+      if (combat.can("yellowRay") && !have($effect`Everything Looks Yellow`))
+      {
         resources.provide("yellowRay", equipFirst(outfit, yellowRaySources));
       }
       let force_item_source: CombatResource | undefined = undefined;
-      if (combat.can("forceItems")) {
+      if (combat.can("forceItems"))
+      {
         force_item_source = equipFirst(outfit, forceItemSources);
         if (force_item_source === undefined && !have($effect`Everything Looks Yellow`))
           force_item_source = equipFirst(outfit, yellowRaySources);
@@ -404,7 +429,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       }
 
       const banish_state = globalStateCache.banishes();
-      if (combat.can("banish") && !banish_state.isFullyBanished(task)) {
+      if (combat.can("banish") && !banish_state.isFullyBanished(task))
+      {
         const available_tasks = this.tasks.filter((task) => this.available(task));
         const banishSources = unusedBanishes(banish_state, available_tasks);
         resources.provide("banish", equipFirst(outfit, banishSources));
@@ -422,9 +448,11 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       }
 
       // Don't equip the orb if we have a bad target
-      if (task.active_priority?.has(Priorities.BadOrb)) {
+      if (task.active_priority?.has(Priorities.BadOrb))
+      {
         outfit.equip({ avoid: $items`miniature crystal ball` });
-        if (outfit.equips.get($slot`familiar`) === $item`miniature crystal ball`) {
+        if (outfit.equips.get($slot`familiar`) === $item`miniature crystal ball`)
+        {
           outfit.equips.delete($slot`familiar`);
         }
       }
@@ -434,31 +462,36 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       if (
         task.active_priority?.has(Priorities.GoodOrb) &&
         (!combat.can("banish") || !banish_state.isFullyBanished(task))
-      ) {
+      )
+      {
         outfit.equip($item`miniature crystal ball`);
       }
 
       // Set up a runaway if there are combats we do not care about
-      if (!outfit.skipDefaults) {
-        const runawaySources = getRunawaySources(task.do instanceof Location ? task.do : undefined);
+      if (!outfit.skipDefaults)
+      {
+        const runawaySources = getRunawaySources();
         let runaway = undefined;
-        if (combat.can("ignore") || combat.can("ignoreSoftBanish")) {
+        if (combat.can("ignore") || combat.can("ignoreSoftBanish"))
+        {
           runaway = equipFirst(outfit, runawaySources);
-          if (runaway?.effect) task.other_effects = [...(task.other_effects ?? []), runaway.effect];
+          if (runaway?.effect) task.other_effects = [ ...(task.other_effects ?? []), runaway.effect ];
           resources.provide("ignore", runaway);
           resources.provide("ignoreSoftBanish", runaway);
         }
-        if (combat.can("ignoreNoBanish") && myLevel() >= 11) {
+        if (combat.can("ignoreNoBanish") && myLevel() >= 11)
+        {
           if (runaway !== undefined && !runaway.banishes)
             resources.provide("ignoreNoBanish", runaway);
-          else {
+          else
+          {
             runaway = equipFirst(
               outfit,
               runawaySources.filter((source) => !source.banishes)
             );
             resources.provide("ignoreNoBanish", runaway);
             if (runaway?.effect)
-              task.other_effects = [...(task.other_effects ?? []), runaway.effect];
+              task.other_effects = [ ...(task.other_effects ?? []), runaway.effect ];
           }
         }
       }
@@ -471,7 +504,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
           !task.boss &&
           this.tasks.every((t) => t.completed() || !t.combat?.can("killFree")) &&
           get("sidequestNunsCompleted") !== "none")
-      ) {
+      )
+      {
         resources.provide("killFree", equipFirst(outfit, freekillSources));
       }
 
@@ -487,7 +521,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
         !have($effect`Teleportitis`) &&
         force_item_source?.equip !== $item`Fourth of May Cosplay Saber` &&
         !get("noncombatForcerActive")
-      ) {
+      )
+      {
         if (
           myTurncount() >= ROUTE_WAIT_TO_NCFORCE &&
           this.tasks.find(
@@ -497,9 +532,11 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
               t.name !== task.name &&
               undelay(t.ncforce)
           ) !== undefined
-        ) {
+        )
+        {
           const ncforcer = equipFirst(outfit, forceNCSources);
-          if (ncforcer) {
+          if (ncforcer)
+          {
             combat.macro(ncforcer.do, undefined, true);
           }
         }
@@ -525,13 +562,15 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       (!resources.has("ignore") && !resources.has("banish"));
     equipCharging(outfit, mightKillSomething ?? false);
 
-    if (get("noncombatForcerActive")) {
+    if (get("noncombatForcerActive"))
+    {
       // Avoid some things that might override the NC and break the tracking
       outfit.equip({ avoid: $items`Kramco Sausage-o-Matic™` });
     }
 
     // Prepare full outfit
-    if (!outfit.skipDefaults) {
+    if (!outfit.skipDefaults)
+    {
       const freecombat = task.freecombat || wanderers.find((wanderer) => wanderer.chance() === 1);
       const modifier = getModifiersFrom(outfit);
 
@@ -553,16 +592,20 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     // 2. If task.orbtargets() is undefined, an orb is detrimental in this zone, do not use it.
     // 3. Otherwise, use an orb if task.orbtargets() is nonempty, or if there are absorb targets.
     const orb_targets = task.orbtargets?.() ?? [];
-    if (orb_targets.length > 0 && !outfit.skipDefaults) {
+    if (orb_targets.length > 0 && !outfit.skipDefaults)
+    {
       outfit.equip($item`miniature crystal ball`);
     }
 
     equipDefaults(outfit);
 
     // Kill wanderers
-    for (const wanderer of wanderers) {
-      for (const monster of undelay(wanderer.monsters)) {
-        if (combat.currentStrategy(monster) !== "killHard") {
+    for (const wanderer of wanderers)
+    {
+      for (const monster of undelay(wanderer.monsters))
+      {
+        if (combat.currentStrategy(monster) !== "killHard")
+        {
           combat.action("killHard", monster);
           if (wanderer.action) combat.macro(wanderer.action, monster);
         }
@@ -575,7 +618,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     if (holidayMonsters.length > 0 && !task.boss) combat.action("ignore", ...holidayMonsters);
 
     // Upgrade normal kills to free kills if provided
-    if (resources.has("killFree") && !task.boss) {
+    if (resources.has("killFree") && !task.boss)
+    {
       combat.action(
         "killFree",
         (combat.where("kill") ?? []).filter((mon) => !mon.boss)
@@ -608,20 +652,23 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
   dress(task: ActiveTask, outfit: Outfit): void {
     const effects: Effect[] = undelay(task.effects) ?? [];
     const other_effects = task.other_effects ?? [];
-    applyEffects(outfit.modifier.join(","), [...effects, ...other_effects]);
+    applyEffects(outfit.modifier.join(","), [ ...effects, ...other_effects ]);
 
     cacheDress(outfit);
     fixFoldables(outfit);
 
-    const equipped = [...new Set(Slot.all().map((slot) => equippedItem(slot)))];
-    if (args.debug.verboseequip) {
+    const equipped = [ ...new Set(Slot.all().map((slot) => equippedItem(slot))) ];
+    if (args.debug.verboseequip)
+    {
       print(`Equipped: ${equipped.join(", ")}`);
-    } else {
+    } else
+    {
       logprint(`Equipped: ${equipped.join(", ")}`);
     }
     logModifiers(outfit);
 
-    if (undelay(task.freeaction)) {
+    if (undelay(task.freeaction))
+    {
       // Prepare only as requested by the task
       return;
     }
@@ -630,13 +677,15 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
     if (
       (have($effect`Once-Cursed`) || have($effect`Twice-Cursed`) || have($effect`Thrice-Cursed`)) &&
       get("hiddenApartmentProgress") < 7
-    ) {
+    )
+    {
       this.propertyManager.set({
-        hpAutoRecoveryItems: ensureRecovery("hpAutoRecoveryItems", [], ["relaxing hot tub"]),
+        hpAutoRecoveryItems: ensureRecovery("hpAutoRecoveryItems", [], [ "relaxing hot tub" ]),
       });
-    } else {
+    } else
+    {
       this.propertyManager.set({
-        hpAutoRecoveryItems: ensureRecovery("hpAutoRecoveryItems", ["relaxing hot tub"], []),
+        hpAutoRecoveryItems: ensureRecovery("hpAutoRecoveryItems", [ "relaxing hot tub" ], []),
       });
     }
     if (myHp() < 100 && myHp() < myMaxhp()) restoreHp(myMaxhp() < 100 ? myMaxhp() : 100);
@@ -651,14 +700,16 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
         (availableAmount($item`tiny stillsuit`) > 0 &&
           !haveEquipped($item`tiny stillsuit`) &&
           familiarEquippedEquipment(args.minor.stillsuit) !== $item`tiny stillsuit`))
-    ) {
+    )
+    {
       equip(args.minor.stillsuit, $item`tiny stillsuit`);
     }
   }
 
   setChoices(task: ActiveTask, manager: PropertiesManager): void {
     super.setChoices(task, manager);
-    if (equippedAmount($item`June cleaver`) > 0) {
+    if (equippedAmount($item`June cleaver`) > 0)
+    {
       this.propertyManager.setChoices({
         // June cleaver noncombats
         1467: 3, // +adv
@@ -682,10 +733,14 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
   ): void {
     // Always be ready to fight possible wanderers, even if we didn't equip
     // things on purpose, e.g. if we equip Kramco for +item.
-    for (const wanderer of wandererSources) {
-      if (wanderer.possible()) {
-        for (const monster of undelay(wanderer.monsters)) {
-          if (task_combat.currentStrategy(monster) !== "killHard") {
+    for (const wanderer of wandererSources)
+    {
+      if (wanderer.possible())
+      {
+        for (const monster of undelay(wanderer.monsters))
+        {
+          if (task_combat.currentStrategy(monster) !== "killHard")
+          {
             task_combat.action("killHard", monster);
             if (wanderer.action) task_combat.macro(wanderer.action, monster);
           }
@@ -696,7 +751,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
 
     // The carn potted plant may kill the enemy early,
     // so set up the normal combat as an autoattack.
-    if (haveEquipped($item`carnivorous potted plant`)) {
+    if (haveEquipped($item`carnivorous potted plant`))
+    {
       const macro = task_combat.compile(
         task_resources,
         this.options?.combat_defaults,
@@ -714,47 +770,29 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
 
     // Copy grimoire Engine.do in order to add Map the Monsters
     const result = typeof task.do === "function" ? task.do() : task.do;
-    if (result instanceof Location) {
-      const monster_to_map = undelay(task.map_the_monster) ?? $monster`none`;
-      if (task.map_the_monster && monster_to_map !== $monster`none` && get("_monstersMapped") < 3) {
-        useSkill($skill`Map the Monsters`);
-        if (get("mappingMonsters")) {
-          for (let i = 0; i < 4; i++) {
-            // Try to actually trigger the monster
-            // (Repeating if we hit a cleaver NC, etc.)
-            set("lastEncounter", "");
-            visitUrl(toUrl(result));
-            runChoice(1, `heyscriptswhatsupwinkwink=${monster_to_map.id}`);
-            if (!get("mappingMonsters")) break;
-            if (myAdventures() < start_advs) break;
-            if (!lastEncounterWasWanderingNC()) break;
-          }
-        } else {
-          adv1(result, -1, "");
-        }
-      } else {
-        adv1(result, -1, "");
-      }
+    if (result instanceof Location)
+    {
+      adv1(result, -1, "");
     }
     runCombat();
     while (inMultiFight()) runCombat();
     if (choiceFollowsFight()) runChoice(-1);
-
-    if (myAdventures() !== start_advs) getExtros();
 
     // Crash if we unexpectedly lost the fight
     if (
       !undelay(task.expectbeatenup) &&
       have($effect`Beaten Up`) &&
       haveEffect($effect`Beaten Up`) < 5
-    ) {
+    )
+    {
       // Poetic Justice gives 5
       if (
         haveEffect($effect`Beaten Up`) > beaten_turns || // Turns of beaten-up increased, so we lost
         (haveEffect($effect`Beaten Up`) === beaten_turns &&
           // Turns of beaten-up was constant but adventures went down, so we lost fight while already beaten up
           myAdventures() < start_advs)
-      ) {
+      )
+      {
         print(
           `Fight was lost (debug info: ${beaten_turns} => ${haveEffect(
             $effect`Beaten Up`
@@ -780,7 +818,8 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       resetBadOrb();
     if (get("_latteBanishUsed") && shouldFinishLatte()) refillLatte();
     autosellJunk();
-    for (const poisoned of $effects`Hardly Poisoned at All, A Little Bit Poisoned, Somewhat Poisoned, Really Quite Poisoned, Majorly Poisoned, Toad In The Hole`) {
+    for (const poisoned of $effects`Hardly Poisoned at All, A Little Bit Poisoned, Somewhat Poisoned, Really Quite Poisoned, Majorly Poisoned, Toad In The Hole`)
+    {
       if (have(poisoned)) uneffect(poisoned);
     }
     globalStateCache.invalidate();
@@ -798,7 +837,7 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       choiceAdventureScript: "loopsmol_choice.ash",
       mpAutoRecoveryItems: ensureRecovery(
         "mpAutoRecoveryItems",
-        ["black cherry soda", "doc galaktik's invigorating tonic"],
+        [ "black cherry soda", "doc galaktik's invigorating tonic" ],
         [
           "rest in your campaway tent",
           "rest at the chateau",
@@ -808,7 +847,7 @@ export class Engine extends BaseEngine<CombatActions, ActiveTask> {
       ),
       hpAutoRecoveryItems: ensureRecovery(
         "hpAutoRecoveryItems",
-        ["scroll of drastic healing", "doc galaktik's homeopathic elixir"],
+        [ "scroll of drastic healing", "doc galaktik's homeopathic elixir" ],
         [
           "rest in your campaway tent",
           "rest at the chateau",
@@ -843,57 +882,31 @@ function autosellJunk(): void {
 
   // Sell junk items
   const junk = $items`hamethyst, baconstone, meat stack, dense meat stack, facsimile dictionary, space blanket, 1\,970 carat gold, black snake skin, demon skin, hellion cube, adder bladder, weremoose spit, Knob Goblin firecracker, wussiness potion, diamond-studded cane, Knob Goblin tongs, Knob Goblin scimitar, eggbeater, red-hot sausage fork, Knob Goblin pants, awful poetry journal, black pixel, pile of dusty animal bones, 1952 Mickey Mantle card, liquid ice, fat stacks of cash`;
-  for (const item of junk) {
+  for (const item of junk)
+  {
     if (have(item)) autosell(item, itemAmount(item));
   }
 
   // Sell all but one of a few items
   const partial_junk = $items`ruby W, metallic A, lowercase N, heavy D`;
-  for (const item of partial_junk) {
+  for (const item of partial_junk)
+  {
     if (itemAmount(item) > 1) autosell(item, itemAmount(item) - 1);
   }
 
   // Use wallets
   const wallets = $items`ancient vinyl coin purse, black pension check, old leather wallet, Gathered Meat-Clip, old coin purse`;
-  for (const item of wallets) {
+  for (const item of wallets)
+  {
     if (have(item)) use(item, itemAmount(item));
   }
 
   // Sell a few other items if we have to
   const lastresorts = $items`keg shield, perforated battle paddle, bottle opener belt buckle, beer bomb, Kokomo Resort Pass, giant pinky ring, Eye Agate, Azurite, Lapis Lazuli`;
-  for (const item of lastresorts) {
+  for (const item of lastresorts)
+  {
     if (myMeat() >= 1000) return;
     if (have(item)) autosell(item, itemAmount(item));
-  }
-}
-
-function getExtros(): void {
-  // Mafia doesn't always notice the workshed
-  if (!get("_loopsmol_checkworkshed", false)) {
-    const workshed = visitUrl("campground.php?action=workshed");
-    if (
-      workshed.includes("Cold Medicine Cabinet") &&
-      getWorkshed() !== $item`cold medicine cabinet`
-    ) {
-      throw `Mafia is not detecting your cold medicine cabinet; consider visiting manually`;
-    }
-    set("_loopsmol_checkworkshed", true);
-  }
-
-  if (get("_coldMedicineConsults") >= 5) return;
-  if (get("_nextColdMedicineConsult") > totalTurnsPlayed()) return;
-  if (getWorkshed() !== $item`cold medicine cabinet`) return;
-
-  const options = visitUrl("campground.php?action=workshed");
-  let match;
-  const regexp = /descitem\((\d+)\)/g;
-  while ((match = regexp.exec(options)) !== null) {
-    const item = descToItem(match[1]);
-    if (item === $item`Extrovermectin™`) {
-      visitUrl("campground.php?action=workshed");
-      runChoice(5);
-      return;
-    }
   }
 }
 
@@ -907,15 +920,18 @@ function resetBadOrb(): boolean {
   if (get("_juneCleaverFightsLeft") === 0 && haveEquipped($item`June cleaver`))
     cliExecute("unequip june cleaver");
 
-  try {
+  try
+  {
     const encounter = visitUrl(toUrl(shrine));
-    if (!encounter.includes("Fire When Ready")) {
+    if (!encounter.includes("Fire When Ready"))
+    {
       print("Unable to stare longingly at a shrine ball cradle");
     }
     // Walk away
     runChoice(6);
     return true;
-  } catch (e) {
+  } catch (e)
+  {
     print(`We ran into an issue when gazing at a shrine for balls: ${e}.`, "red");
   }
 
@@ -924,15 +940,17 @@ function resetBadOrb(): boolean {
 
 function ensureRecovery(property: string, items: string[], avoid: string[]): string {
   const recovery_property = get(property).split(";");
-  for (const item of items) {
-    if (!recovery_property.includes(item)) {
+  for (const item of items)
+  {
+    if (!recovery_property.includes(item))
+    {
       recovery_property.push(item);
     }
   }
   return recovery_property.filter((v) => !avoid.includes(v)).join(";");
 }
 
-const modifierNames: { [name: string]: string } = {
+const modifierNames: { [ name: string ]: string } = {
   combat: "Combat Rate",
   item: "Item Drop",
   meat: "Meat Drop",
@@ -950,10 +968,12 @@ const modifierNames: { [name: string]: string } = {
 
 function logModifiers(outfit: Outfit) {
   const maximizer = outfit.modifier.join(",").toLowerCase();
-  for (const modifier of Object.keys(modifierNames)) {
-    if (maximizer.includes(modifier)) {
-      const name = modifierNames[modifier];
-      const value = numericModifier(modifierNames[modifier]);
+  for (const modifier of Object.keys(modifierNames))
+  {
+    if (maximizer.includes(modifier))
+    {
+      const name = modifierNames[ modifier ];
+      const value = numericModifier(modifierNames[ modifier ]);
       logprint(`= ${name}: ${value}`);
     }
   }

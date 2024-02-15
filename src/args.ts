@@ -1,13 +1,5 @@
 import { Args } from "grimoire-kolmafia";
-import { Item } from "kolmafia";
-import { $familiar, $item } from "libram";
-
-const worksheds = [
-  [$item`none`, "Do nothing"],
-  [$item`model train set`, "Swap to model train set"],
-  [$item`cold medicine cabinet`, "Swap to cold medicine cabinet"],
-  [$item`Asdon Martin keyfob`, "Swap to asdon martin keyfob"],
-] as [Item, string][];
+import { $familiar } from "libram";
 
 export const args = Args.create(
   "loopsmol",
@@ -19,16 +11,6 @@ export const args = Args.create(
       pulls: Args.number({
         help: "Number of pulls to use. Lower this if you would like to save some pulls to use for in-ronin farming. (Note that this argument is not needed if you pull all your farming items before running the script).",
         default: 20,
-      }),
-      workshed: Args.item({
-        help: "Workshed item to place in an empty workshed at the start of the run.",
-        default: $item`model train set`,
-        options: worksheds,
-      }),
-      swapworkshed: Args.item({
-        help: "Workshed item to place in a workshed to replace the cold medicine cabinet.",
-        default: $item`none`,
-        options: worksheds,
       }),
     }),
     minor: Args.group("Minor Options", {
@@ -118,10 +100,6 @@ export const args = Args.create(
       settings: Args.flag({
         help: "Show the parsed value for all arguments and exit.",
         setting: "",
-      }),
-      lastasdonbumperturn: Args.number({
-        help: "Set the last usage of Asdon Martin: Spring-Loaded Front Bumper, in case of a tracking issue",
-        hidden: true,
       }),
       ignorekeys: Args.flag({
         help: "Ignore the check that all keys can be obtained. Typically for hardcore, if you plan to get your own keys",
