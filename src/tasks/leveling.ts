@@ -31,10 +31,11 @@ import {
 } from "libram";
 import { Quest } from "../engine/task";
 import { CombatStrategy } from "../engine/combat";
-import { args } from "../main";
+import { args } from "../args";
 
 export function primestatId(): number {
-  switch (myPrimestat()) {
+  switch (myPrimestat())
+  {
     case $stat`Muscle`:
       return 1;
     case $stat`Mysticality`:
@@ -55,7 +56,7 @@ export const LevelingQuest: Quest = {
       completed: () =>
         have($effect`That's Just Cloud-Talk, Man`) ||
         get("_campAwayCloudBuffs", 0) > 0 ||
-        myLevel() >= args.levelto,
+        myLevel() >= args.minor.levelto,
       do: () => visitUrl("place.php?whichplace=campaway&action=campaway_sky"),
       freeaction: true,
       limit: { tries: 1 },
@@ -64,10 +65,12 @@ export const LevelingQuest: Quest = {
       name: "Daycare",
       after: [],
       ready: () => get("daycareOpen"),
-      completed: () => get("_daycareGymScavenges") !== 0 || myLevel() >= args.levelto,
+      completed: () => get("_daycareGymScavenges") !== 0 || myLevel() >= args.minor.levelto,
       do: (): void => {
-        if ((get("daycareOpen") || get("_daycareToday")) && !get("_daycareSpa")) {
-          switch (myPrimestat()) {
+        if ((get("daycareOpen") || get("_daycareToday")) && !get("_daycareSpa"))
+        {
+          switch (myPrimestat())
+          {
             case $stat`Muscle`:
               cliExecute("daycare muscle");
               break;
@@ -90,7 +93,7 @@ export const LevelingQuest: Quest = {
       name: "Bastille",
       after: [],
       ready: () => have($item`Bastille Battalion control rig`),
-      completed: () => get("_bastilleGames") !== 0 || myLevel() >= args.levelto,
+      completed: () => get("_bastilleGames") !== 0 || myLevel() >= args.minor.levelto,
       do: () =>
         cliExecute(`bastille ${myPrimestat() === $stat`Mysticality` ? "myst" : myPrimestat()}`),
       limit: { tries: 1 },
@@ -103,13 +106,16 @@ export const LevelingQuest: Quest = {
       name: "Chateau",
       after: [],
       ready: () => ChateauMantegna.have(),
-      completed: () => get("timesRested") >= totalFreeRests() || myLevel() >= args.levelto,
+      completed: () => get("timesRested") >= totalFreeRests() || myLevel() >= args.minor.levelto,
       prepare: (): void => {
-        if (myPrimestat() === $stat`Muscle`) {
+        if (myPrimestat() === $stat`Muscle`)
+        {
           ChateauMantegna.changeNightstand("electric muscle stimulator");
-        } else if (myPrimestat() === $stat`Mysticality`) {
+        } else if (myPrimestat() === $stat`Mysticality`)
+        {
           ChateauMantegna.changeNightstand("foreign language tapes");
-        } else if (myPrimestat() === $stat`Moxie`) {
+        } else if (myPrimestat() === $stat`Moxie`)
+        {
           ChateauMantegna.changeNightstand("bowl of potpourri");
         }
       },
@@ -124,7 +130,7 @@ export const LevelingQuest: Quest = {
       name: "LOV Tunnel",
       after: [],
       ready: () => get("loveTunnelAvailable"),
-      completed: () => get("_loveTunnelUsed") || myLevel() >= args.levelto,
+      completed: () => get("_loveTunnelUsed") || myLevel() >= args.minor.levelto,
       do: $location`The Tunnel of L.O.V.E.`,
       choices: { 1222: 1, 1223: 1, 1224: primestatId(), 1225: 1, 1226: 2, 1227: 1, 1228: 3 },
       combat: new CombatStrategy()
@@ -148,11 +154,13 @@ export const LevelingQuest: Quest = {
       after: [],
       ready: () => get("snojoAvailable"),
       prepare: (): void => {
-        if (get("snojoSetting") === null) {
+        if (get("snojoSetting") === null)
+        {
           visitUrl("place.php?whichplace=snojo&action=snojo_controller");
           runChoice(primestatId());
         }
-        if (have($item`Greatest American Pants`)) {
+        if (have($item`Greatest American Pants`))
+        {
           ensureEffect($effect`Super Skill`); // after GAP are equipped
         }
         cliExecute("uneffect ode to booze");
@@ -165,7 +173,8 @@ export const LevelingQuest: Quest = {
       },
       combat: new CombatStrategy()
         .macro((): Macro => {
-          if (have($familiar`Frumious Bandersnatch`) && have($item`Greatest American Pants`)) {
+          if (have($familiar`Frumious Bandersnatch`) && have($item`Greatest American Pants`))
+          {
             // Grind exp for Bandersnatch
             return new Macro()
               .skill($skill`Curse of Weaksauce`)
@@ -174,7 +183,8 @@ export const LevelingQuest: Quest = {
               .trySkill($skill`Saucegeyser`)
               .attack()
               .repeat();
-          } else {
+          } else
+          {
             // no need to grind exp
             return new Macro().skill($skill`Saucegeyser`).repeat();
           }
@@ -199,7 +209,7 @@ export const LevelingQuest: Quest = {
         },
       ],
       ready: () => have($familiar`God Lobster`),
-      completed: () => get("_godLobsterFights") >= 3 || myLevel() >= args.levelto,
+      completed: () => get("_godLobsterFights") >= 3 || myLevel() >= args.minor.levelto,
       do: (): void => {
         visitUrl("main.php?fightgodlobster=1");
         runCombat();
@@ -218,7 +228,7 @@ export const LevelingQuest: Quest = {
       name: "Witchess",
       after: [],
       ready: () => Witchess.have(),
-      completed: () => Witchess.fightsDone() >= 5 || myLevel() >= args.levelto,
+      completed: () => Witchess.fightsDone() >= 5 || myLevel() >= args.minor.levelto,
       do: () => Witchess.fightPiece($monster`Witchess Knight`),
       combat: new CombatStrategy().killHard(),
       outfit: {
@@ -242,7 +252,7 @@ export const LevelingQuest: Quest = {
         have($familiar`Pocket Professor`) &&
         have($item`Kramco Sausage-o-Matic™`) &&
         getKramcoWandererChance() === 1,
-      completed: () => get("_sausageFights") > 0 || myLevel() >= args.levelto || !args.professor,
+      completed: () => get("_sausageFights") > 0 || myLevel() >= args.minor.levelto || !args.minor.professor,
       do: $location`The Outskirts of Cobb's Knob`,
       combat: new CombatStrategy()
         .macro(
@@ -270,7 +280,7 @@ export const LevelingQuest: Quest = {
           get: () => cliExecute("fold makeshift garbage shirt"),
         },
       ],
-      completed: () => get("_neverendingPartyFreeTurns") >= 10 || myLevel() >= args.levelto,
+      completed: () => get("_neverendingPartyFreeTurns") >= 10 || myLevel() >= args.minor.levelto,
       do: $location`The Neverending Party`,
       choices: { 1322: 2, 1324: 5 },
       combat: new CombatStrategy()
@@ -279,11 +289,14 @@ export const LevelingQuest: Quest = {
             get("_neverendingPartyFreeTurns") >= 7 &&
             get("_feelPrideUsed") < 3 &&
             have($skill`Feel Pride`)
-          ) {
+          )
+          {
             return new Macro().skill($skill`Feel Pride`);
-          } else if (get("_neverendingPartyFreeTurns") >= 6 && have($item`cosmic bowling ball`)) {
+          } else if (get("_neverendingPartyFreeTurns") >= 6 && have($item`cosmic bowling ball`))
+          {
             return new Macro().skill($skill`Bowl Sideways`);
-          } else {
+          } else
+          {
             return new Macro();
           }
         })
@@ -306,7 +319,7 @@ export const LevelingQuest: Quest = {
         },
       ],
       ready: () => have($familiar`Machine Elf`),
-      completed: () => get("_machineTunnelsAdv") >= 5 || myLevel() >= args.levelto,
+      completed: () => get("_machineTunnelsAdv") >= 5 || myLevel() >= args.minor.levelto,
       do: $location`The Deep Machine Tunnels`,
       combat: new CombatStrategy().killHard(),
       outfit: {

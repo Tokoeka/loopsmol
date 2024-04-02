@@ -36,8 +36,8 @@ import { Quest } from "../engine/task";
 import { primestatId } from "./leveling";
 
 // eslint-disable-next-line libram/verify-constants
-const pullBuyList = $items`cuppa Voraci tea, cuppa Sobrie tea, meteoreo, Tea\, Earl Grey\, Hot, ice rice, snow crab, mouth-watering mayolus, splendid martini, tuxedo shirt, 1\,970 carat gold, meat engine, dope wheels`;
-const pullList = $items`Pantsgiving, distention pill, synthetic dog hair pill, mime army shotglass, smooth velvet hat, smooth velvet pocket square, smooth velvet socks, smooth velvet hanky`;
+const pullBuyList = $items`1\,970 carat gold, meat engine, dope wheels`; // cuppa Voraci tea, cuppa Sobrie tea, meteoreo, Tea\, Earl Grey\, Hot, ice rice, snow crab, mouth-watering mayolus, splendid martini, tuxedo shirt
+const pullList = $items`Pantsgiving, distention pill, synthetic dog hair pill, mime army shotglass`; // smooth velvet hat, smooth velvet pocket square, smooth velvet socks, smooth velvet hanky
 
 const moonSign =
 	myPrimestat() === $stat`Muscle`

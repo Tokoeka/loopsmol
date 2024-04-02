@@ -22,7 +22,7 @@ export const DietQuest: Quest = {
     {
       name: "Eat",
       ready: () =>
-        atLevel(5) &&
+        atLevel(13) &&
         (have($item`Ol' Scratch's salad fork`) || args.minor.skipfork) &&
         ((!get("pizzaOfLegendEaten") && have($item`Pizza of Legend`)) ||
           (!get("calzoneOfLegendEaten") && have($item`Calzone of Legend`)) ||
@@ -71,7 +71,7 @@ export const DietQuest: Quest = {
     {
       name: "Numberology",
       priority: () => Priorities.Free,
-      after: ["Summon/War Frat 151st Infantryman"],
+      after: [ "Summon/War Frat 151st Infantryman" ],
       completed: () =>
         get("_universeCalculated") >= get("skillLevel144") || get("_universeCalculated") >= 3,
       ready: () => myAdventures() > 0 && Object.keys(reverseNumberology()).includes("69"),

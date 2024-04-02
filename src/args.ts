@@ -75,6 +75,14 @@ export const args = Args.create(
         help: "Delevel to level 13 with hot dogs before fighting the NS",
         default: false,
       }),
+      levelto: Args.number({
+        help: "Aim to level to this with free leveling resources.",
+        default: 13,
+      }),
+      professor: Args.flag({
+        help: "Use pocket professor as one of the free leveling resources. This uses up some copiers, but may help to level.",
+        default: false,
+      }),
     }),
     debug: Args.group("Debug Options", {
       actions: Args.number({
