@@ -6,36 +6,43 @@ import {
   outfit as equipOutfit,
   equippedAmount,
   equippedItem,
+  Familiar,
   familiarWeight,
+  holiday,
   Item,
   itemAmount,
   weaponHands as mafiaWeaponHands,
   myBasestat,
   myMeat,
   myTurncount,
+  numericModifier,
   outfitPieces,
   print,
   Skill,
   Slot,
   toSlot,
+  weightAdjustment,
 } from "kolmafia";
 import {
   $effect,
   $familiar,
   $familiars,
   $item,
+  $items,
   $skill,
   $slot,
   $slots,
   $stat,
+  clamp,
   DaylightShavings,
   get,
   have,
+  maxBy,
 } from "libram";
 import { Resource } from "./resources";
 import { Keys, keyStrategy } from "../tasks/keys";
 import { Modes, Outfit, OutfitSpec, step } from "grimoire-kolmafia";
-import { atLevel, haveLoathingLegion } from "../lib";
+import { atLevel, garboAverageValue, garboValue, haveLoathingLegion } from "../lib";
 import { args } from "../args";
 
 export function canEquipResource(outfit: Outfit, resource: Resource): boolean {
@@ -81,6 +88,118 @@ export function equipUntilCapped<T extends Resource>(outfit: Outfit, resources: 
   return result;
 }
 
+type ValueFamiliar = {
+  familiar: Familiar;
+  value: () => number;
+};
+
+const standardFamiliars: ValueFamiliar[] = [
+  {
+    familiar: $familiar`Obtuse Angel`,
+    value: () => 0.02 * garboValue($item`time's arrow`),
+  },
+  {
+    familiar: $familiar`Stocking Mimic`,
+    value: () => {
+      const weight = familiarWeight($familiar`Stocking Mimic`) + weightAdjustment();
+      return (
+        garboAverageValue(...$items`Polka Pop, BitterSweetTarts, Piddles`) / 6 +
+        (1 / 3 + (have($effect`Jingle Jangle Jingle`) ? 0.1 : 0)) * weight
+      );
+    },
+  },
+  {
+    familiar: $familiar`Shorter-Order Cook`,
+    value: () =>
+      garboAverageValue(
+        ...$items`short beer, short stack of pancakes, short stick of butter, short glass of water, short white`
+      ) / 11, // 9 with blue plate
+  },
+  {
+    familiar: $familiar`Twitching Space Critter`,
+
+    // Item is ludicrously overvalued and incredibly low-volume.
+    // We can remove this cap once the price reaches a lower equilibrium
+    // we probably won't, but we can.
+    value: () => Math.min(garboValue($item`twitching space egg`) * 0.0002, 690),
+  },
+  {
+    familiar: $familiar`Hobo Monkey`,
+    value: () => 75,
+  },
+  {
+    familiar: $familiar`Rockin' Robin`,
+    value: () => garboValue($item`robin's egg`) / clamp(30 - get("rockinRobinProgress"), 1, 30),
+  },
+  {
+    familiar: $familiar`Optimistic Candle`,
+    value: () =>
+      garboValue($item`glob of melted wax`) / clamp(30 - get("optimisticCandleProgress"), 1, 30),
+  },
+  {
+    familiar: $familiar`Garbage Fire`,
+    value: () =>
+      garboAverageValue(
+        ...$items`burning newspaper, extra-toasted half sandwich, mulled hobo wine`
+      ) / clamp(30 - get("garbageFireProgress"), 1, 30),
+  },
+  {
+    familiar: $familiar`Cookbookbat`,
+    value: () =>
+      (3 *
+        garboAverageValue(
+          ...$items`Vegetable of Jarlsberg, Yeast of Boris, St. Sneaky Pete's Whey`
+        )) /
+      11,
+  },
+  {
+    familiar: $familiar`Patriotic Eagle`,
+    value: () =>
+      holiday().includes("Dependence Day") ? 0.05 * garboValue($item`souvenir flag`) : 0,
+  },
+  {
+    familiar: $familiar`Chest Mimic`,
+    value: () =>
+      ((get("valueOfAdventure") * get("garbo_embezzlerMultiplier", 2.68)) / 50) *
+      (numericModifier("Familiar Exp") + 1),
+  },
+  {
+    familiar: $familiar`Peace Turkey`,
+    value: () =>
+      garboAverageValue(...$items`peace shooter, whirled peas, piece of cake`) *
+      (0.24 + Math.sqrt(familiarWeight($familiar`Peace Turkey`))),
+  },
+];
+
+function profitFamiliar(): Familiar {
+  return maxBy(
+    standardFamiliars.filter(({ familiar }) => have(familiar)),
+    ({ value }) => value()
+  ).familiar;
+}
+
+export function getModifiersFrom(outfit: OutfitSpec | Outfit | undefined): string {
+  if (!outfit?.modifier) return "";
+  if (Array.isArray(outfit.modifier)) return outfit.modifier.join(",");
+  return outfit.modifier;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function yellowSubmarinePossible(assumePulls = false) {
+  return false;
+  // if (!have($item`Powerful Glove`)) return false;
+  // if (!assumePulls && !have($item`Buddy Bjorn`)) return false;
+  // if (!have($familiar`Puck Man`) && !have($familiar`Ms. Puck Man`)) return false;
+  // if (
+  //   have($item`dingy dinghy`) ||
+  //   have($item`junk junk`) ||
+  //   have($item`skeletal skiff`) ||
+  //   have($item`yellow submarine`)
+  // )
+  //   return false;
+  // return true;
+}
+
 export function equipInitial(outfit: Outfit): void {
   const modifier = getModifiersFrom(outfit);
 
@@ -109,7 +228,11 @@ export function equipInitial(outfit: Outfit): void {
   }
 }
 
-export function equipCharging(outfit: Outfit, mightKillSomething: boolean): void {
+export function equipCharging(
+  outfit: Outfit,
+  mightKillSomething: boolean,
+  noFightingFamiliars: boolean
+): void {
   if (outfit.skipDefaults) return;
 
   const modifier = getModifiersFrom(outfit);
@@ -133,11 +256,11 @@ export function equipCharging(outfit: Outfit, mightKillSomething: boolean): void
     }
   }
 
-  const need_bowling_balls =
+  const bowling_ball_count =
     get("hiddenBowlingAlleyProgress") +
     itemAmount($item`bowling ball`) +
-    closetAmount($item`bowling ball`) <
-    5;
+    closetAmount($item`bowling ball`);
+  const need_bowling_balls = bowling_ball_count < 5;
   const need_star_key =
     (itemAmount($item`star`) < 8 || itemAmount($item`line`) < 7) &&
     !have($item`Richard's star key`) &&
@@ -157,7 +280,11 @@ export function equipCharging(outfit: Outfit, mightKillSomething: boolean): void
     outfit.equip($familiar`Gelatinous Cubeling`);
   }
 
-  if (get("screechCombats") > 0 && !get("banishedPhyla").includes("hippy"))
+  if (
+    get("screechCombats") > 0 &&
+    !get("banishedPhyla").includes("hippy") &&
+    !noFightingFamiliars
+  )
   {
     outfit.equip($familiar`Patriotic Eagle`);
   }
@@ -168,7 +295,7 @@ export function equipCharging(outfit: Outfit, mightKillSomething: boolean): void
   }
 }
 
-export function equipDefaults(outfit: Outfit): void {
+export function equipDefaults(outfit: Outfit, noFightingFamiliars: boolean): void {
   if (have($familiar`Temporal Riftlet`))
   {
     outfit.equip($familiar`Temporal Riftlet`);
@@ -186,16 +313,39 @@ export function equipDefaults(outfit: Outfit): void {
     outfit.equip($item`dromedary drinking helmet`);
 
   const modifier = getModifiersFrom(outfit);
-  outfit.equip($familiar`Jill-of-All-Trades`);
-  if (
-    outfit.familiar === $familiar`Jill-of-All-Trades` &&
-    (modifier.includes("meat") || modifier.includes("item"))
-  )
-    outfit.equip($item`LED candle`);
+  if (modifier.includes("meat") || modifier.includes("item"))
+  {
+    if (outfit.equip($familiar`Jill-of-All-Trades`))
+    {
+      outfit.equip($item`LED candle`);
+    }
+  }
+
+  // If I figure out how to add to combat macro:
+
+  /* if(modifier.includes("item"))
+    if(get("everfullDartPerks").includes("Butt awareness"))
+      outfit.addBonus($item`Everfull Dart Holster`, 30) */
 
   if (outfit.skipDefaults) return;
 
-  if (modifier.includes("-combat")) outfit.equip($familiar`Disgeist`); // low priority
+  if (modifier.includes("-combat"))
+  {
+    outfit.equip($familiar`Peace Turkey`);
+    outfit.equip($familiar`Disgeist`);
+  } // low priority
+
+  if (!noFightingFamiliars)
+  {
+    if (args.minor.profitFamiliar)
+    {
+      outfit.equip(profitFamiliar());
+      if (profitFamiliar() === $familiar`Chest Mimic` && have($item`tiny stillsuit`))
+        outfit.equip($item`tiny stillsuit`);
+    } else outfit.equip($familiar`Jill-of-All-Trades`);
+  }
+
+  outfit.equip($familiar`Blood-Faced Volleyball`); // default
 
   outfit.equip($item`mafia thumb ring`);
   if (atLevel(11)) outfit.equip($item`lucky gold ring`);
@@ -248,13 +398,21 @@ export function equipDefaults(outfit: Outfit): void {
       outfit.equip($item`fresh coat of paint`);
     }
     outfit.equip($item`familiar scrapbook`);
-    outfit.equip($item`protonic accelerator pack`);
+    if (have($item`bat wings`) && get("_batWingsFreeFights", 0) < 5)
+    {
+      outfit.equip($item`bat wings`);
+    } else
+    {
+      outfit.equip($item`protonic accelerator pack`);
+      outfit.equip($item`bat wings`);
+    }
     outfit.equip($item`unwrapped knock-off retro superhero cape`);
     outfit.equip($item`designer sweatpants`);
     outfit.equip($item`warbear long johns`);
     outfit.equip($item`square sponge pants`);
     outfit.equip($item`Cargo Cultist Shorts`);
     outfit.equip($item`lucky gold ring`);
+    outfit.equip($item`Everfull Dart Holster`);
 
     if (
       yellowSubmarinePossible() &&
@@ -295,22 +453,6 @@ export function equipDefaults(outfit: Outfit): void {
   }
 
   outfit.equip($item`miniature crystal ball`);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function yellowSubmarinePossible(assumePulls = false) {
-  return false;
-  // if (!have($item`Powerful Glove`)) return false;
-  // if (!assumePulls && !have($item`Buddy Bjorn`)) return false;
-  // if (!have($familiar`Puck Man`) && !have($familiar`Ms. Puck Man`)) return false;
-  // if (
-  //   have($item`dingy dinghy`) ||
-  //   have($item`junk junk`) ||
-  //   have($item`skeletal skiff`) ||
-  //   have($item`yellow submarine`)
-  // )
-  //   return false;
-  // return true;
 }
 
 export function fixFoldables(outfit: Outfit) {
@@ -590,9 +732,3 @@ export const stenchPlanner = new ElementalPlanner([
     modes: { parka: "dilophosaur" },
   },
 ]);
-
-export function getModifiersFrom(outfit: OutfitSpec | Outfit | undefined): string {
-  if (!outfit?.modifier) return "";
-  if (Array.isArray(outfit.modifier)) return outfit.modifier.join(",");
-  return outfit.modifier;
-}

@@ -13,6 +13,8 @@ import {
   myTurncount,
   pullsRemaining,
   storageAmount,
+  toInt,
+  visitUrl,
 } from "kolmafia";
 import { $familiar, $item, $items, $skill, get, have, set } from "libram";
 import { args } from "../args";
@@ -65,7 +67,11 @@ export const pulls: PullSpec[] = [
       if (myDaycount() > 1 && myAdventures() > 5) return undefined;
       return true;
     },
-    price: 300000,
+    price: 400000,
+  },
+  {
+    pull: $item`crepe paper parachute cape`,
+    optional: true,
   },
   {
     pull: $item`Frosty's frosty mug`,
@@ -76,6 +82,11 @@ export const pulls: PullSpec[] = [
       return true;
     },
     price: 200000,
+  },
+  {
+    pull: $item`Bowl of Infinite Jelly`,
+    useful: () => myFullness() === 0,
+    optional: true,
   },
   {
     pull: $item`milk of magnesium`,
@@ -178,6 +189,26 @@ export const pulls: PullSpec[] = [
     name: "Runaway IoTM",
   },
   {
+    pull: $items`aquaviolet jub-jub bird, charpuce jub-jub bird, crimsilion jub-jub bird, stomp box`,
+    optional: true,
+    name: "Runaway Comma IoTM",
+    useful: () =>
+      have($familiar`Comma Chameleon`) &&
+      !have($familiar`Frumious Bandersnatch`) &&
+      !have($familiar`Pair of Stomping Boots`),
+    post: () => {
+      const bestCommaPull =
+        $items`aquaviolet jub-jub bird, charpuce jub-jub bird, crimsilion jub-jub bird, stomp box`.find(
+          (f) => have(f)
+        );
+      if (bestCommaPull !== undefined) {
+        visitUrl(`inv_equip.php?which=2&action=equip&whichitem=${toInt(bestCommaPull)}&pwd`);
+        visitUrl("charpane.php");
+        cliExecute("set _commaRunDone = true");
+      }
+    },
+  },
+  {
     pull: $item`ring of conflict`, // Last chance for -5% combat frequency
     useful: () =>
       !have($item`unbreakable umbrella`) &&
@@ -232,18 +263,6 @@ export const pulls: PullSpec[] = [
       !have($item`wet stunt nut stew`) &&
       !have($item`wet stew`) &&
       (!have($item`lion oil`) || !have($item`bird rib`)),
-  },
-  {
-    pull: $item`ninja rope`,
-    useful: () => step("questL08Trapper") < 3 && step("questL11Shen") > 3,
-  },
-  {
-    pull: $item`ninja carabiner`,
-    useful: () => step("questL08Trapper") < 3 && step("questL11Shen") > 3,
-  },
-  {
-    pull: $item`ninja crampons`,
-    useful: () => step("questL08Trapper") < 3 && step("questL11Shen") > 3,
   },
   {
     pull: $item`Flash Liquidizer Ultra Dousing Accessory`,

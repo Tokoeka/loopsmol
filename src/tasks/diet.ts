@@ -5,6 +5,7 @@ import {
   myAdventures,
   myFullness,
   myInebriety,
+  mySign,
   reverseNumberology,
   use,
   useSkill,
@@ -73,7 +74,9 @@ export const DietQuest: Quest = {
       priority: () => Priorities.Free,
       after: [ "Summon/War Frat 151st Infantryman" ],
       completed: () =>
-        get("_universeCalculated") >= get("skillLevel144") || get("_universeCalculated") >= 3,
+        // When you use 3 casts of numberology in ronin,
+        // it locks you out of all your remaining casts once you break ronin
+        get("_universeCalculated") >= get("skillLevel144") || get("_universeCalculated") >= 2,
       ready: () => myAdventures() > 0 && Object.keys(reverseNumberology()).includes("69"),
       do: (): void => {
         customRestoreMp(1);
@@ -81,6 +84,19 @@ export const DietQuest: Quest = {
       },
       limit: { tries: 5 },
       freeaction: true,
+    },
+    {
+      name: "Tune after Diet",
+      after: ["Diet/Eat", "Diet/Drink"],
+      ready: () => mySign() === "Blender" || mySign() === "Opossum",
+      completed: () =>
+        !have($item`hewn moon-rune spoon`) ||
+        args.minor.tune === undefined ||
+        get("moonTuned", false),
+      priority: () => Priorities.Free,
+      freeaction: true,
+      do: () => cliExecute(`spoon ${args.minor.tune}`),
+      limit: { tries: 1 },
     },
   ],
 };

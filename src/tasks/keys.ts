@@ -44,7 +44,7 @@ import { step } from "grimoire-kolmafia";
 import { Priorities } from "../engine/priority";
 import { args } from "../args";
 import { atLevel, haveFlorest, underStandard } from "../lib";
-import { ensureWithMPSwaps } from "../engine/moods";
+import { castWithMpSwaps, ensureWithMPSwaps } from "../engine/moods";
 
 export enum Keys {
   Deck = "Deck",
@@ -185,7 +185,7 @@ function dailyDungeonTask(): Omit<Task, "completed" | "name" | "after"> {
           return Macro.item($item`daily dungeon malware`);
         return new Macro();
       })
-      .kill(),
+      .killHard(),
     choices: () => {
       return {
         689: 1,

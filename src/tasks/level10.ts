@@ -18,7 +18,7 @@ import { Quest } from "../engine/task";
 import { step } from "grimoire-kolmafia";
 import { Priorities } from "../engine/priority";
 import { councilSafe } from "./level12";
-import { forceItemPossible } from "../engine/resources";
+import { forceItemPossible, tryForceNC, tryPlayApriling } from "../engine/resources";
 
 export const GiantQuest: Quest = {
   name: "Giant",
@@ -53,17 +53,16 @@ export const GiantQuest: Quest = {
       after: [ "Start", "Get Bean" ],
       completed: () => step("questL10Garbage") >= 1,
       do: () => use($item`enchanted bean`),
+      outfit: { equip: $items`spring shoes` },
       limit: { tries: 1 },
       freeaction: true,
     },
     {
       name: "Airship YR Healer",
       after: [ "Grow Beanstalk" ],
+      prepare: () => tryPlayApriling("-combat"),
       completed: () => have($item`amulet of extreme plot significance`),
       do: $location`The Penultimate Fantasy Airship`,
-      choices: () => {
-        return { 178: 2, 182: have($item`model airship`) ? 1 : 4 };
-      },
       post: () => {
         if (have($effect`Temporary Amnesia`)) cliExecute("uneffect Temporary Amnesia");
       },
@@ -89,15 +88,15 @@ export const GiantQuest: Quest = {
           };
       },
       combat: new CombatStrategy()
-        .macro(
-          () =>
+        .macro(() => {
+          if (
             have($item`Mohawk wig`) ||
-              !have($skill`Emotionally Chipped`) ||
-              get("_feelEnvyUsed") >= 3
-              ? new Macro()
-              : Macro.skill($skill`Feel Envy`).step(killMacro()),
-          $monster`Burly Sidekick`
-        )
+            !have($skill`Emotionally Chipped`) ||
+            get("_feelEnvyUsed") >= 3
+          )
+            return new Macro();
+          return Macro.skill($skill`Feel Envy`).step(killMacro());
+        }, $monster`Burly Sidekick`)
         .forceItems($monster`Quiet Healer`),
     },
     {
@@ -105,9 +104,6 @@ export const GiantQuest: Quest = {
       after: [ "Airship YR Healer" ],
       completed: () => have($item`S.O.C.K.`),
       do: $location`The Penultimate Fantasy Airship`,
-      choices: () => {
-        return { 178: 2, 182: have($item`model airship`) ? 1 : 4 };
-      },
       post: () => {
         if (have($effect`Temporary Amnesia`)) cliExecute("uneffect Temporary Amnesia");
       },
@@ -132,6 +128,10 @@ export const GiantQuest: Quest = {
           $location`The Castle in the Clouds in the Sky (Basement)`.noncombatQueue,
           "Mess Around with Gym"
         ) || step("questL10Garbage") >= 8,
+      prepare: () => {
+        tryForceNC();
+        tryPlayApriling("-combat");
+      },
       do: $location`The Castle in the Clouds in the Sky (Basement)`,
       outfit: () => {
         if (!have($effect`Citizen of a Zone`) && have($familiar`Patriotic Eagle`))
@@ -159,6 +159,7 @@ export const GiantQuest: Quest = {
     {
       name: "Ground",
       after: [ "Basement Finish" ],
+      prepare: () => tryPlayApriling("-combat"),
       completed: () => step("questL10Garbage") >= 9,
       do: $location`The Castle in the Clouds in the Sky (Ground Floor)`,
       choices: { 672: 3, 673: 3, 674: 3, 1026: 2 },
@@ -187,6 +188,7 @@ export const GiantQuest: Quest = {
     {
       name: "Top Floor",
       after: [ "Ground" ],
+      prepare: () => tryPlayApriling("-combat"),
       completed: () => step("questL10Garbage") >= 10,
       do: $location`The Castle in the Clouds in the Sky (Top Floor)`,
       outfit: { equip: $items`Mohawk wig`, modifier: "-combat" },

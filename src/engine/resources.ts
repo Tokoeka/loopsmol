@@ -3,6 +3,7 @@ import {
   Effect,
   Familiar,
   familiarWeight,
+  getProperty,
   haveEquipped,
   Item,
   itemAmount,
@@ -14,6 +15,10 @@ import {
   retrieveItem,
   Skill,
   totalTurnsPlayed,
+  use,
+  useFamiliar,
+  useSkill,
+  visitUrl,
 } from "kolmafia";
 import {
   $effect,
@@ -23,6 +28,8 @@ import {
   $items,
   $monster,
   $skill,
+  AprilingBandHelmet,
+  CinchoDeMayo,
   Counter,
   get,
   getActiveEffects,
@@ -40,10 +47,10 @@ import {
   OutfitSpec,
 } from "grimoire-kolmafia";
 import { atLevel } from "../lib";
-import { Task } from "./task";
 import { args } from "../args";
 import { BanishState } from "./state";
 import { oresNeeded } from "../tasks/level8";
+import { Task } from "./task";
 
 export interface Resource {
   name: string;
@@ -56,8 +63,17 @@ export interface Resource {
 
 export type CombatResource = Resource & BaseCombatResource;
 
-export interface BanishSource extends CombatResource {
+type BanishSimpleDo = CombatResource & {
   do: Item | Skill;
+};
+type BanishMacroDo = CombatResource & {
+  do: Macro;
+  tracker: Item | Skill;
+};
+export type BanishSource = BanishSimpleDo | BanishMacroDo;
+function getTracker(source: BanishSource): Item | Skill {
+  if ("tracker" in source) return source.tracker;
+  return source.do;
 }
 
 const banishSources: BanishSource[] = [
@@ -66,6 +82,13 @@ const banishSources: BanishSource[] = [
     available: () =>
       have($item`cosmic bowling ball`) || get("cosmicBowlingBallReturnCombats") === 0,
     do: $skill`Bowl a Curveball`,
+  },
+  {
+    name: "Spring Shoes Kick Away",
+    available: () => have($item`spring shoes`) && !have($effect`Everything Looks Green`),
+    equip: $item`spring shoes`,
+    do: Macro.skill($skill`Spring Kick`).skill($skill`Spring Away`),
+    tracker: $skill`Spring Kick`,
   },
   {
     name: "Latte",
@@ -101,6 +124,13 @@ const banishSources: BanishSource[] = [
     equip: $item`cursed monkey's paw`,
     do: $skill`Monkey Slap`,
   },
+  {
+    name: "Spring Shoes Kick",
+    available: () => have($item`spring shoes`),
+    equip: $item`spring shoes`,
+    do: Macro.skill($skill`Spring Kick`).step(killMacro()),
+    tracker: $skill`Spring Kick`,
+  },
 ];
 
 // Return a list of all banishes not allocated to some available task
@@ -117,7 +147,9 @@ export function unusedBanishes(banishState: BanishState, tasks: Task[]): BanishS
     }
   }
 
-  return banishSources.filter((banish) => banish.available() && !used_banishes.has(banish.do));
+  return banishSources.filter(
+    (banish) => banish.available() && !used_banishes.has(getTracker(banish))
+  );
 }
 
 export interface WandererSource extends Resource {
@@ -283,7 +315,16 @@ export const runawayValue =
     ? 0.8 * get("valueOfAdventure")
     : get("valueOfAdventure");
 
-export function getRunawaySources() {
+function commaItemFinder(): Item | undefined {
+  const commaItem =
+    $items`aquaviolet jub-jub bird, charpuce jub-jub bird, crimsilion jub-jub bird, stomp box`.find(
+      (f) => have(f)
+    );
+
+  return commaItem;
+}
+
+export function getRunawaySources(location?: Location) {
   const runawayFamiliarPlan = planRunawayFamiliar();
 
   return [
@@ -309,12 +350,9 @@ export function getRunawaySources() {
     },
     {
       name: "Spring Shoes",
-      // eslint-disable-next-line libram/verify-constants
       available: () => have($item`spring shoes`) && !have($effect`Everything Looks Green`),
-      // eslint-disable-next-line libram/verify-constants
       do: new Macro().skill($skill`Spring Away`),
       chance: () => 1,
-      // eslint-disable-next-line libram/verify-constants
       equip: $item`spring shoes`,
       banishes: false,
     },
@@ -337,6 +375,36 @@ export function getRunawaySources() {
       equip: runawayFamiliarPlan.outfit,
       do: new Macro().runaway(),
       chance: () => 1,
+      banishes: false,
+    },
+    {
+      name: "Comma Chameleon",
+      prepare: (): void => {
+        const commaItem = commaItemFinder();
+
+        if (commaItem !== undefined && get("commaFamiliar") === null)
+        {
+          useFamiliar($familiar`Comma Chameleon`);
+          visitUrl(`inv_equip.php?which=2&action=equip&whichitem=${toInt(commaItem)}&pwd`);
+        }
+      },
+      available: (): boolean => {
+        const commaItem = commaItemFinder();
+
+        if (
+          runawayFamiliarPlan.available &&
+          runawayFamiliarPlan.outfit.familiar === $familiar`Comma Chameleon` &&
+          (get("commaFamiliar") === $familiar`Frumious Bandersnatch` ||
+            get("commaFamiliar") === $familiar`Pair of Stomping Boots` ||
+            (commaItem !== undefined && have(commaItem)))
+        )
+          return true;
+        return false;
+      },
+      equip: runawayFamiliarPlan.outfit,
+      do: new Macro().runaway(),
+      chance: () => 1,
+      effect: $effect`Ode to Booze`,
       banishes: false,
     },
     {
@@ -393,9 +461,18 @@ const famweightOptions: FamweightOption[] = [
 ];
 
 function planRunawayFamiliar(): RunawayFamiliarSpec {
-  const chosenFamiliar = $familiars`Frumious Bandersnatch, Pair of Stomping Boots`.find((f) =>
+  const bestFamiliar = $familiars`Frumious Bandersnatch, Pair of Stomping Boots`.find((f) =>
     have(f)
   );
+  const altFamiliar =
+    have($familiar`Comma Chameleon`) &&
+    (getProperty("commaFamiliar") === "Frumious Bandersnatch" ||
+      getProperty("commaFamiliar") === "Pair of Stomping Boots" ||
+      getProperty("_commaRunDone"));
+
+  const chosenFamiliar =
+    bestFamiliar ?? (altFamiliar === true ? $familiar`Comma Chameleon` : false);
+
   if (chosenFamiliar)
   {
     const goalWeight = 5 * (1 + get("_banderRunaways"));
@@ -554,10 +631,64 @@ export const forceNCSources: ForceNCSorce[] = [
     equip: { equip: $items`Jurassic Parka`, modes: { parka: "spikolodon" } },
     do: Macro.skill($skill`Launch spikolodon spikes`),
   },
+  {
+    name: "McHugeLarge",
+    available: () => have($item`McHugeLarge left ski`) && get("_mcHugeLargeAvalancheUses", 0) < 3,
+    equip: [
+      { equip: $items`McHugeLarge left ski, designer sweatpants` },
+      { equip: $items`McHugeLarge left ski` },
+    ],
+    do: Macro.trySkill($skill`Summon Love Gnats`)
+      .externalIf(!get("lovebugsUnlocked"), Macro.trySkill($skill`Sweat Flood`))
+      .skill($skill`McHugeLarge Avalanche`),
+  },
 ];
 
 export function forceNCPossible(): boolean {
   return forceNCSources.find((s) => s.available()) !== undefined;
+}
+
+type ForceNCSource = {
+  available: () => boolean;
+  do: () => void;
+};
+
+const tuba = $item`Apriling band tuba`;
+
+export const noncombatForceNCSources: ForceNCSource[] = [
+  {
+    available: () => (AprilingBandHelmet.canJoinSection() || have(tuba)) && tuba.dailyusesleft > 0,
+    do: () => AprilingBandHelmet.play(tuba, true),
+  },
+  {
+    available: () => CinchoDeMayo.currentCinch() >= 60,
+    do: () => useSkill($skill`Cincho: Fiesta Exit`),
+  },
+];
+
+export function tryForceNC(): boolean {
+  if (get("noncombatForcerActive")) return true;
+  noncombatForceNCSources.find((source) => source.available())?.do();
+  return get("noncombatForcerActive");
+}
+
+export function tryPlayApriling(modifier: string): void {
+  if (!AprilingBandHelmet.have()) return;
+
+  if (modifier.includes("+combat"))
+  {
+    AprilingBandHelmet.conduct("Apriling Band Battle Cadence");
+  }
+
+  if (modifier.includes("-combat"))
+  {
+    AprilingBandHelmet.conduct("Apriling Band Patrol Beat");
+  }
+
+  if (modifier.includes("food") || modifier.includes("booze"))
+  {
+    AprilingBandHelmet.conduct("Apriling Band Celebration Bop");
+  }
 }
 
 export type BackupTarget = {
@@ -572,19 +703,20 @@ export const backupTargets: BackupTarget[] = [
     completed: () =>
       (itemAmount($item`star`) >= 8 && itemAmount($item`line`) >= 7) ||
       have($item`Richard's star key`) ||
-      get("nsTowerDoorKeysUsed").includes("Richard's star key"),
+      get("nsTowerDoorKeysUsed").includes("Richard's star key") ||
+      args.minor.skipbackups,
     outfit: { modifier: "item" },
     limit_tries: 3,
   },
   {
     monster: $monster`mountain man`,
-    completed: () => oresNeeded() === 0,
+    completed: () => oresNeeded() === 0 || args.minor.skipbackups,
     outfit: { modifier: "item" },
     limit_tries: 2,
   },
   {
     monster: $monster`Eldritch Tentacle`,
-    completed: () => false,
+    completed: () => args.minor.skipbackups,
     limit_tries: 11,
   },
 ];

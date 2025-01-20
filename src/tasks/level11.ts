@@ -35,11 +35,15 @@ import { CombatStrategy } from "../engine/combat";
 import { atLevel, debug, haveLoathingIdolMicrophone } from "../lib";
 import { councilSafe } from "./level12";
 import { customRestoreMp } from "../engine/moods";
+import { tryPlayApriling } from "../engine/resources";
 
 const Diary: Task[] = [
   {
     name: "Forest",
     after: [ "Start" ],
+    prepare: () => {
+      tryPlayApriling("+combat");
+    },
     completed: () => step("questL11Black") >= 2,
     do: $location`The Black Forest`,
     post: () => {
@@ -190,6 +194,7 @@ const Desert: Task[] = [
       cliExecute("use * desert sightseeing pamphlet");
       if (have($item`worm-riding hooks`) && have($item`drum machine`)) use($item`drum machine`);
     },
+    parachute: $monster`blur`,
   },
   {
     name: "Milestone",
@@ -409,8 +414,9 @@ const Pyramid: Task[] = [
       cliExecute("refresh all");
     },
     outfit: () => {
-      if (!have($item`Pick-O-Matic lockpicks`)) return { familiar: $familiar`Gelatinous Cubeling` }; // Ensure we get equipment
-      return {};
+      if (!have($item`Pick-O-Matic lockpicks`))
+        return { familiar: $familiar`Gelatinous Cubeling` }; // Ensure we get equipment
+      else return {};
     },
     combat: new CombatStrategy().killHard(),
     limit: { tries: 1 },

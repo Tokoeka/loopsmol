@@ -50,6 +50,7 @@ const summonTargets: SummonTarget[] = [
     outfit: {
       equip: $items`unwrapped knock-off retro superhero cape`,
       modes: { retrocape: ["heck", "hold"] },
+      avoid: $items`carnivorous potted plant`,
     },
     combat: new CombatStrategy().yellowRay(),
   },
@@ -69,6 +70,7 @@ const summonTargets: SummonTarget[] = [
         return {
           equip: $items`unwrapped knock-off retro superhero cape`,
           modes: { retrocape: ["heck", "hold"] },
+          avoid: $items`carnivorous potted plant`,
         };
       else
         return {
@@ -138,7 +140,12 @@ const summonTargets: SummonTarget[] = [
       have($item`Richard's star key`) ||
       get("nsTowerDoorKeysUsed").includes("Richard's star key"),
     outfit: () => {
-      if (get("camelSpit") === 100) return { modifier: "item", familiar: $familiar`Melodramedary` };
+      if (get("camelSpit") === 100)
+        return {
+          modifier: "item",
+          familiar: $familiar`Melodramedary`,
+          avoid: $items`carnivorous potted plant`,
+        };
       return { modifier: "item" };
     },
     combat: new CombatStrategy().macro(Macro.trySkill($skill`%fn, spit on them!`)).killItem(),
@@ -200,26 +207,31 @@ const summonSources: SummonSource[] = [
   },
   {
     name: "Fax",
-    available: () =>
-      args.minor.fax &&
-      !underStandard() &&
-      !get("_photocopyUsed") &&
-      have($item`Clan VIP Lounge key`)
-        ? 1
-        : 0,
+    available: () => {
+      if (
+        args.minor.fax &&
+        !underStandard() &&
+        !get("_photocopyUsed") &&
+        have($item`Clan VIP Lounge key`)
+      )
+        return 1;
+      return 0;
+    },
     canFight: (mon: Monster) => canFaxbot(mon),
     summon: (mon: Monster) => {
       // Default to CheeseFax unless EasyFax is the only faxbot online
-      const faxbot = ["OnlyFax", "CheeseFax", "EasyFax"].find((bot) => isOnline(bot)) ?? "CheeseFax";
+      const faxbot =
+        ["OnlyFax", "CheeseFax", "EasyFax"].find((bot) => isOnline(bot)) ?? "CheeseFax";
       for (let i = 0; i < 6; i++) {
         if (i % 3 === 0) chatPrivate(faxbot, mon.name);
         wait(10 + i);
         if (checkFax(mon)) break;
       }
-      if (!checkFax(mon))
-        throw `Failed to acquire photocopied ${mon.name}.${
-          !isOnline(faxbot) ? `Faxbot ${faxbot} appears to be offline.` : ""
-        }`;
+      if (!checkFax(mon)) {
+        if (!isOnline(faxbot))
+          throw `Failed to acquire photocopied ${mon.name}. Faxbot ${faxbot} appears to be offline.`;
+        throw `Failed to acquire photocopied ${mon.name} but ${faxbot} is online.`;
+      }
       use($item`photocopied monster`);
     },
   },

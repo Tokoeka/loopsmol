@@ -26,6 +26,10 @@ export const args = Args.create(
         help: "Use your Space Jellyfish to get stench jellies during the war (this may reduce your goose familiar exp).",
         default: false,
       }),
+      profitFamiliar: Args.flag({
+        help: "Use free familiar turns for familiar related profits.",
+        default: false,
+      }),
       pvp: Args.flag({
         help: "Break your hippy stone at the start of the run.",
         default: false,
@@ -38,9 +42,21 @@ export const args = Args.create(
         help: "Always equip the combat lover's locket, in order to get monsters inside quickly.",
         default: false,
       }),
+      skipbackups: Args.flag({
+        help: "Don't use any Backup Camera Backups.",
+        default: false,
+      }),
+      saveember: Args.flag({
+        help: "Don't use sept-ember censer.",
+        default: false,
+      }),
       savelocket: Args.number({
         help: "Number of uses of the combat lover's locket to save.",
         default: 0,
+      }),
+      savetuba: Args.flag({
+        help: "Don't use Apriling Band Helmet's Tuba summon.",
+        default: false,
       }),
       luck: Args.number({
         help: 'Multiply the threshold for stopping execution when "you may just be unlucky". Increasing this can be dangerous and cause the script to waste more adventures; use at your own risk.',
@@ -74,6 +90,9 @@ export const args = Args.create(
       delevel: Args.flag({
         help: "Delevel to level 13 with hot dogs before fighting the NS",
         default: false,
+      }),
+      tune: Args.string({
+        help: "Use your hewn moon-rune spoon to retune to this sign after dieting.",
       }),
       levelto: Args.number({
         help: "Aim to level to this with free leveling resources.",

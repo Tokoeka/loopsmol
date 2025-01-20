@@ -29,6 +29,8 @@ export type Task = {
   boss?: boolean;
   ncforce?: boolean | (() => boolean);
   ignore_banishes?: () => boolean;
+  nofightingfamiliars?: boolean;
+  parachute?: Monster | (() => Monster | undefined); // Try and crepe parachute to the given monster, if possible
 } & BaseTask<CombatActions>;
 
 export type Priority = {
